@@ -77,7 +77,6 @@ function normalizeSourceMap(map) {
  * @this {webpack.loader.LoaderContext}
  */
 function loader(buffer) {
-  console.log("loading", this.resourcePath);
   const options = getOptions(this);
   validate(schema, options, {
     name: "AssemblyScript Loader",
