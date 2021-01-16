@@ -1,8 +1,9 @@
 const path = require("path");
+const { Writable } = require("stream");
 const asc = require("assemblyscript/cli/asc.js");
-const schema = require("./schema.json");
 const { getOptions } = require("loader-utils");
 const { validate } = require("schema-utils");
+const schema = require("./options.json");
 
 /**
  * @param {object} options
@@ -28,10 +29,55 @@ function mapOptionsToArgs(options) {
 }
 
 /**
+ * @returns {module:stream.internal.Writable}
+ */
+function createMemoryStream() {
+  let buffer = [];
+  const stream = new Writable({
+    write(chunk, encoding, callback) {
+      buffer.push(chunk.toString());
+      callback();
+    },
+  });
+  Object.assign(stream, {
+    toString() {
+      return buffer.join("");
+    },
+  });
+
+  return stream;
+}
+
+/**
+ * utility copied from less-loader
+ *
+ * @param {object} map
+ * @returns {object}
+ */
+function normalizeSourceMap(map) {
+  const newMap = map;
+
+  // map.file is an optional property that provides the output filename.
+  // Since we don't know the final filename in the webpack build chain yet, it makes no sense to have it.
+  // eslint-disable-next-line no-param-reassign
+  delete newMap.file;
+
+  // eslint-disable-next-line no-param-reassign
+  newMap.sourceRoot = "";
+
+  // `less` returns POSIX paths, that's why we need to transform them back to native paths.
+  // eslint-disable-next-line no-param-reassign
+  newMap.sources = newMap.sources.map((source) => path.normalize(source));
+
+  return newMap;
+}
+
+/**
  * @param {Buffer} buffer
  * @this {webpack.loader.LoaderContext}
  */
 function loader(buffer) {
+  console.log("loading", this.resourcePath);
   const options = getOptions(this);
   validate(schema, options, {
     name: "AssemblyScript Loader",
@@ -45,20 +91,8 @@ function loader(buffer) {
   const sourceMapFile = binaryFile + ".map";
   /** @type {Object.<string, Buffer>} */
   const output = {};
-  /** @type {Error|undefined} */
-  let lastError;
-
-  const args = [
-    path.basename(this.resourcePath),
-    "--baseDir",
-    path.dirname(this.resourcePath),
-    "--binaryFile",
-    binaryFile,
-    ...mapOptionsToArgs(options),
-  ];
-  if (this.sourceMap) {
-    args.push("--sourceMap");
-  }
+  const stderr = createMemoryStream();
+  let isDone = false;
 
   /**
    * @param {string} fileName
@@ -70,27 +104,31 @@ function loader(buffer) {
     const filePath = path.resolve(baseDir, path.basename(fileName));
 
     try {
-      const content =
-        filePath === this.resourcePath
-          ? buffer
-          : this.fs.readFileSync(filePath, "utf8");
+      let content;
+      if (filePath === this.resourcePath) {
+        content = buffer;
+      } else {
+        content = this.fs.readFileSync(filePath, "utf8");
+        this.addDependency(filePath);
+      }
       return typeof content === "string" ? content : content.toString("utf8");
     } catch (error) {
-      lastError = error;
       return null;
     }
   }
 
   /**
    * @param {string} fileName
-   * @param {string} contents
+   * @param {Buffer | Uint8Array} contents
    * @param {string} baseDir
    * @returns {boolean}
    * @this {webpack.loader.LoaderContext}
    */
   function writeFile(fileName, contents, baseDir) {
     const filePath = path.resolve(baseDir, path.basename(fileName));
-    output[filePath] = contents;
+    output[filePath] = Buffer.isBuffer(contents)
+      ? contents
+      : Buffer.from(contents);
     return true;
   }
 
@@ -108,9 +146,20 @@ function loader(buffer) {
         .readdirSync(dirPath)
         .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
     } catch (error) {
-      lastError = error;
       return null;
     }
+  }
+
+  const args = [
+    path.basename(this.resourcePath),
+    "--baseDir",
+    path.dirname(this.resourcePath),
+    "--binaryFile",
+    binaryFile,
+    ...mapOptionsToArgs(options),
+  ];
+  if (this.sourceMap) {
+    args.push("--sourceMap");
   }
 
   asc.main(
@@ -119,19 +168,53 @@ function loader(buffer) {
       readFile: readFile.bind(this),
       writeFile: writeFile.bind(this),
       listFiles: listFiles.bind(this),
+      stderr,
     },
     (error) => {
-      if (error) return callback(error);
+      // prevent from multiple callback calls from asc side
+      if (isDone) {
+        return;
+      }
+      isDone = true;
+
+      stderr
+        .toString()
+        .split("\n")
+        .forEach((message) => {
+          if (message.startsWith("ERROR ")) {
+            this.emitError(message.slice("ERROR ".length));
+          } else if (message.startsWith("WARNING ")) {
+            this.emitWarning(message.slice("WARNING ".length));
+          }
+        });
+
+      if (error) {
+        return callback(error);
+      }
 
       const binary = output[binaryFile];
       const sourceMap = output[sourceMapFile];
 
-      if (!binary)
-        return callback(
-          lastError || new Error("Unknown error on compiling AssemblyScript.")
-        );
+      if (!binary) {
+        return callback(new Error("Error on compiling AssemblyScript."));
+      }
 
-      return callback(null, binary, sourceMap);
+      if (sourceMap) {
+        try {
+          return callback(
+            null,
+            binary,
+            normalizeSourceMap(JSON.parse(sourceMap.toString()))
+          );
+        } catch (error) {
+          this.emitWarning(
+            "Invalid source map has been generated by AssemblyScript."
+          );
+          return callback(null, binary);
+        }
+      } else {
+        return callback(null, binary);
+      }
     }
   );
 }
