@@ -1,13 +1,14 @@
 <div align="center">
 
 <h1>as-loader</h1>
-<p>AssemblyScript loader for webpack</p>
+<p>AssemblyScript loader for webpack (⚠️ In development ⚠️)</p>
 
 </div>
 
 ## Installation
 
-This loader requires minimum Node.js 8 and webpack 4
+This loader requires minimum AssemblyScript 0.18, Node.js 8 and webpack 4 
+(webpack 5 support will be implemented soon)
 
 ```sh
 # with npm
@@ -31,19 +32,7 @@ module.exports = {
       {
         test: /\.ts$/,
         include: path.resolve(__dirname, "src/assembly"),
-        use: [
-          // emits WASM Buffer as a .wasm file
-          // and returns CJS module with an URL to that file
-          {
-            loader: "file-loader",
-            options: {
-              name: "[path][name].wasm",
-              esModule: false,
-            },
-          },
-          // converts AssemblyScript to WASM Buffer
-          "as-loader",
-        ],
+        loader:  "as-loader",
       },
       {
         test: /\.ts$/,
@@ -61,6 +50,8 @@ module.exports = {
 // myModule becomes an URL to the .wasm file
 // (TypeScript doesn't know that, so we can still use the import type)
 import * as myModule from "./assembly/myModule";
+// this example uses @assemblyscript/loader, but you can use
+// any loader, like as-bind or WebAssembly API
 import { instantiateStreaming } from "@assemblyscript/loader";
 
 async function loadAndRun() {
@@ -74,3 +65,6 @@ async function loadAndRun() {
 
 loadAndRun();
 ```
+
+## Options
+TODO

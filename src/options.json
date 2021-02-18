@@ -3,6 +3,14 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "name": {
+      "type": "string",
+      "description": "The filename template for the target file."
+    },
+    "context": {
+      "type": "string",
+      "description": "A custom file context."
+    },
     "optimizeLevel": {
       "type": "number",
       "minimum": 0,

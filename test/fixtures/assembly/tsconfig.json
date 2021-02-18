@@ -1,7 +1,0 @@
-{
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "types": ["../../../node_modules/assemblyscript/std/types/assembly"]
-  }
-  "include": ["./simple.ts"]
-}

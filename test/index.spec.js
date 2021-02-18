@@ -1,11 +1,10 @@
-const path = require("path");
 const compiler = require("./compiler");
 
 jest.setTimeout(30000);
 
 describe("as-loader", () => {
   it("works without options", async () => {
-    const stats = await compiler("index.ts");
+    const stats = await compiler("correct.ts");
 
     expect(Object.keys(stats.compilation.assets)).toEqual([
       "simple.wasm",
@@ -15,9 +14,8 @@ describe("as-loader", () => {
     expect(stats.compilation.errors).toHaveLength(0);
   });
 
-  it.skip("generates source maps", async () => {
-    // TODO: make it work
-    const stats = await compiler("index.ts", {}, { devtool: "source-map" });
+  it("generates source maps", async () => {
+    const stats = await compiler("correct.ts", {}, { devtool: "source-map" });
 
     expect(Object.keys(stats.compilation.assets)).toEqual([
       "simple.wasm",
@@ -29,53 +27,34 @@ describe("as-loader", () => {
     expect(stats.compilation.errors).toHaveLength(0);
   });
 
-  it.skip("works with thread-loader", async () => {
-    // TODO: fix hanging process
-    const stats = await compiler(
-      "index.ts",
-      {},
-      {
-        module: {
-          rules: [
-            {
-              test: /\.ts$/,
-              include: [path.resolve(__dirname, "./fixtures/assembly")],
-              use: [
-                {
-                  loader: "file-loader",
-                  options: {
-                    name: "[name].wasm",
-                    esModule: false,
-                  },
-                },
-                "thread-loader",
-                {
-                  loader: path.resolve(__dirname, "../index.js"),
-                },
-              ],
-            },
-            {
-              test: /\.ts$/,
-              exclude: [path.resolve(__dirname, "./fixtures/assembly")],
-              use: [
-                {
-                  loader: "ts-loader",
-                  options: {
-                    transpileOnly: true,
-                  },
-                },
-              ],
-            },
-          ],
-        },
-      }
+  it("reports errors in project", async () => {
+    let errors;
+    try {
+      await compiler("broken.ts");
+    } catch (error) {
+      errors = error;
+    }
+    expect(errors).not.toBeUndefined();
+    expect(errors).toHaveLength(4);
+    expect(errors[0]).toContain("./assembly/broken/simple.ts");
+    expect(errors[0]).toContain(
+      "AssemblyScriptError: Compilation failed - found 3 errors."
     );
-
-    expect(Object.keys(stats.compilation.assets)).toEqual([
-      "simple.wasm",
-      "main.js",
-    ]);
-    expect(stats.compilation.warnings).toHaveLength(0);
-    expect(stats.compilation.errors).toHaveLength(0);
+    expect(errors[0]).toContain(" @ ./broken.ts 1:0-53 2:12-20");
+    expect(errors[1]).toEqual(
+      "./assembly/broken/simple.ts 4:14-15\n" +
+        "Type 'i32' is not assignable to type '~lib/string/String'.\n" +
+        " @ ./broken.ts 1:0-53 2:12-20"
+    );
+    expect(errors[2]).toEqual(
+      "./assembly/broken/shared.ts 2:14-15\n" +
+        "Type 'i32' is not assignable to type '~lib/string/String'.\n" +
+        " @ ./broken.ts 1:0-53 2:12-20"
+    );
+    expect(errors[3]).toEqual(
+      "./assembly/broken/shared.ts 2:10-15\n" +
+        "Type '~lib/string/String' is not assignable to type 'i32'.\n" +
+        " @ ./broken.ts 1:0-53 2:12-20"
+    );
   });
 });
