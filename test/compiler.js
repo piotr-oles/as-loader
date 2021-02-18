@@ -27,15 +27,11 @@ module.exports = function compiler(fixture, options = {}, config = {}) {
           include: [path.resolve(__dirname, "./fixtures/assembly")],
           use: [
             {
-              loader: "file-loader",
+              loader: path.resolve(__dirname, "../src/index.js"),
               options: {
                 name: "[name].wasm",
-                esModule: false,
+                ...(options || {}),
               },
-            },
-            {
-              loader: path.resolve(__dirname, "../index.js"),
-              options: options || {},
             },
           ],
         },
@@ -61,11 +57,14 @@ module.exports = function compiler(fixture, options = {}, config = {}) {
   compiler.outputFileSystem.join = path.join.bind(path);
 
   return new Promise((resolve, reject) => {
-    compiler.run((err, stats) => {
-      if (err) reject(err);
-      if (stats.hasErrors()) reject(new Error(stats.toJson().errors));
-
-      resolve(stats);
+    compiler.run((error, stats) => {
+      if (error) {
+        reject(error);
+      } else if (stats.hasErrors()) {
+        reject(stats.toJson().errors.map((error) => error.toString()));
+      } else {
+        resolve(stats);
+      }
     });
   });
 };

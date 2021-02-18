@@ -7,10 +7,13 @@ jobs:
       matrix:
         node: [10, 12, 14]
         os: [ubuntu-latest]
-        webpack: [webpack@^4.0.0, webpack@^5.0.0]
+        webpack: [
+          webpack@^4.0.0,
+          # webpack@^5.0.0 TODO - add support
+        ]
     steps:
     - uses: actions/checkout@v1
-      
+
     - name: Setup node
       uses: actions/setup-node@v1
       with:
@@ -27,7 +30,7 @@ jobs:
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
-      
+
     - name: Install dependencies
       run: yarn install --frozen-lockfile
 
