@@ -45,7 +45,11 @@
       "npm",
       "first-time-contributor",
       "released"
-    ]
+    ],
+    "onlyPublishWithReleaseLabel": true,
+    "shipit": {
+      "noChangelog": true
+    }
   },
   "jest": {
     "testEnvironment": "node"
