@@ -1,6 +1,6 @@
-const path = require("path");
-const webpack = require("webpack");
-const { createFsFromVolume, Volume } = require("memfs");
+import path from "path";
+import webpack from "webpack";
+import { createFsFromVolume, Volume } from "memfs";
 
 /**
  * @param {string} fixture
@@ -8,7 +8,11 @@ const { createFsFromVolume, Volume } = require("memfs");
  * @param {object} config
  * @returns {Promise<webpack.Stats>}
  */
-module.exports = function compiler(fixture, options = {}, config = {}) {
+function compiler(
+  fixture: string,
+  options: Record<string, unknown> = {},
+  config: webpack.Configuration = {}
+) {
   const compiler = webpack({
     mode: "development",
     devtool: config.devtool || false,
@@ -53,10 +57,12 @@ module.exports = function compiler(fixture, options = {}, config = {}) {
     ...config,
   });
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   compiler.outputFileSystem = createFsFromVolume(new Volume());
   compiler.outputFileSystem.join = path.join.bind(path);
 
-  return new Promise((resolve, reject) => {
+  return new Promise<webpack.Stats>((resolve, reject) => {
     compiler.run((error, stats) => {
       if (error) {
         reject(error);
@@ -67,4 +73,6 @@ module.exports = function compiler(fixture, options = {}, config = {}) {
       }
     });
   });
-};
+}
+
+export { compiler };

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapAscOptionsToArgs(options: Record<string, any>): string[] {
   const args = [];
   for (const key in options) {

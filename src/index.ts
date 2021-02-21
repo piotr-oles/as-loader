@@ -18,6 +18,7 @@ function loader(this: webpack.loader.LoaderContext, buffer: Buffer) {
     baseDataPath: "options",
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const callback = this.async()!;
   let isDone = false;
 

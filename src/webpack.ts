@@ -1,11 +1,18 @@
+interface CompatibleWebpackModule {
+  addWarning?(warning: Error): void;
+  addError?(error: Error): void;
+  warnings: Error[];
+  errors: Error[];
+}
+
 /**
  * Add warning to module.
  * Supports webpack 4 and webpack 5.
  */
-function addWarningToModule(module: any, error: Error) {
+function addWarningToModule(module: CompatibleWebpackModule, error: Error) {
   if (typeof module.addWarning === "function") {
     module.addWarning(error);
-  } else if (Array.isArray(module.warnings)) {
+  } else {
     module.warnings.push(error);
   }
 }
@@ -14,10 +21,10 @@ function addWarningToModule(module: any, error: Error) {
  * Add error to module.
  * Supports webpack 4 and webpack 5.
  */
-function addErrorToModule(module: any, error: Error) {
+function addErrorToModule(module: CompatibleWebpackModule, error: Error) {
   if (typeof module.addError === "function") {
     module.addError(error);
-  } else if (Array.isArray(module.errors)) {
+  } else {
     module.errors.push(error);
   }
 }
