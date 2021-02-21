@@ -1,8 +1,40 @@
 name: CI/CD
 on: [push]
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Yarn cache directory
+        id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Yarn cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Build
+        run: yarn build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: lib
+          path: lib
+
   test:
     runs-on: ${{ matrix.os }}
+    needs: build
     strategy:
       matrix:
         node: [10, 12, 14]
@@ -36,6 +68,12 @@ jobs:
 
     - name: Install webpack version
       run: yarn add --dev ${{ matrix.webpack }}
+
+    - name: Download build artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: lib
+        path: lib
 
     - name: Run tests
       run: yarn test

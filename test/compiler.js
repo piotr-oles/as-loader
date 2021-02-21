@@ -27,7 +27,7 @@ module.exports = function compiler(fixture, options = {}, config = {}) {
           include: [path.resolve(__dirname, "./fixtures/assembly")],
           use: [
             {
-              loader: path.resolve(__dirname, "../src/index.js"),
+              loader: path.resolve(__dirname, "../lib/index.js"),
               options: {
                 name: "[name].wasm",
                 ...(options || {}),

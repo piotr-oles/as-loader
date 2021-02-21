@@ -2,31 +2,31 @@
   "name": "as-loader",
   "version": "0.0.0",
   "description": "AssemblyScript loader for webpack",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "repository": "git@github.com:piotr-oles/as-loader.git",
   "author": "Piotr Oleś <piotrek.oles@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "build": "tsc",
     "format": "prettier --write .",
     "lint": "eslint --fix .",
     "test": "jest",
     "release": "auto shipit"
   },
   "files": [
-    "src/*"
+    "lib/*"
   ],
   "peerDependencies": {
     "assemblyscript": "^0.18.0",
     "webpack": "^4.0.0"
   },
   "dependencies": {
-    "@babel/code-frame": "^7.12.13",
-    "line-column": "^1.0.2",
     "loader-utils": "^2.0.0",
     "schema-utils": "^3.0.0"
   },
   "devDependencies": {
     "@auto-it/first-time-contributor": "^10.16.5",
+    "@types/loader-utils": "^2.0.1",
     "@types/webpack": "^4.0.0",
     "assemblyscript": "^0.18.9",
     "auto": "^10.16.5",
@@ -35,7 +35,6 @@
     "jest": "^26.6.3",
     "memfs": "^3.2.0",
     "prettier": "^2.2.1",
-    "thread-loader": "^3.0.1",
     "ts-loader": "^8.0.17",
     "typescript": "^4.1.5",
     "webpack": "^4.0.0"
