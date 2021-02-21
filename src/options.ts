@@ -1,8 +1,5 @@
-/**
- * @param {object} options
- * @returns {string[]}
- */
-function mapAscOptionsToArgs(options) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapAscOptionsToArgs(options: Record<string, any>): string[] {
   const args = [];
   for (const key in options) {
     if (typeof options[key] === "boolean") {
@@ -21,4 +18,4 @@ function mapAscOptionsToArgs(options) {
   return args;
 }
 
-module.exports = { mapAscOptionsToArgs };
+export { mapAscOptionsToArgs };

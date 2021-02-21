@@ -1,25 +1,25 @@
-const path = require("path");
-const asc = require("assemblyscript/cli/asc.js");
-const { DiagnosticCategory } = require("assemblyscript");
-const { getOptions, interpolateName } = require("loader-utils");
-const { validate } = require("schema-utils");
-const schema = require("./options.json");
-const { createHost } = require("./host");
-const { mapAscOptionsToArgs } = require("./options");
-const { AssemblyScriptError } = require("./error");
+import path from "path";
+import webpack from "webpack";
+import asc from "assemblyscript/cli/asc";
+import { DiagnosticCategory } from "assemblyscript";
+import { getOptions, interpolateName } from "loader-utils";
+import { validate } from "schema-utils";
+import { Schema } from "schema-utils/declarations/validate";
+import { createCompilerHost } from "./compiler-host";
+import { mapAscOptionsToArgs } from "./options";
+import { AssemblyScriptError } from "./error";
+import schema from "./options.json";
+import { addErrorToModule, addWarningToModule } from "./webpack";
 
-/**
- * @param {Buffer} buffer
- * @this {webpack.loader.LoaderContext}
- */
-function loader(buffer) {
+function loader(this: webpack.loader.LoaderContext, buffer: Buffer) {
   const options = getOptions(this);
-  validate(schema, options, {
+  validate(schema as Schema, options, {
     name: "AssemblyScript Loader",
     baseDataPath: "options",
   });
 
-  const callback = this.async();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const callback = this.async()!;
   let isDone = false;
 
   const module = this._module;
@@ -30,7 +30,7 @@ function loader(buffer) {
     ...ascOptions
   } = options;
 
-  const interpolatedName = interpolateName(this, name, {
+  const interpolatedName = interpolateName(this, String(name), {
     context,
     content: buffer.toString(),
   });
@@ -40,22 +40,7 @@ function loader(buffer) {
   const binaryFileName = interpolatedName;
   const sourceMapFileName = binaryFileName + ".map";
 
-  const host = createHost(this);
-
-  const addWarning = (error) => {
-    if (typeof module.addWarning === "function") {
-      module.addWarning(error);
-    } else if (Array.isArray(module.warnings)) {
-      module.warnings.push(error);
-    }
-  };
-  const addError = (error) => {
-    if (typeof module.addError === "function") {
-      module.addError(error);
-    } else if (Array.isArray(module.errors)) {
-      module.errors.push(error);
-    }
-  };
+  const host = createCompilerHost(this);
 
   const args = [
     path.basename(this.resourcePath),
@@ -78,11 +63,12 @@ function loader(buffer) {
         listFiles: host.listFiles,
         reportDiagnostic: host.reportDiagnostic,
         stderr: host.stderr,
+        stdout: host.stdout,
       },
       (error) => {
         // prevent from multiple callback calls from asc side
         if (isDone) {
-          return;
+          return 0;
         }
         isDone = true;
 
@@ -93,13 +79,13 @@ function loader(buffer) {
             diagnostic,
             host,
             baseDir,
-            context
+            String(context)
           );
 
           if (diagnostic.category === DiagnosticCategory.ERROR) {
-            addError(error);
+            addErrorToModule(module, error);
           } else {
-            addWarning(error);
+            addWarningToModule(module, error);
           }
         });
         const errorDiagnostics = diagnostics.filter(
@@ -107,13 +93,15 @@ function loader(buffer) {
         );
         if (errorDiagnostics.length) {
           const errorsWord = errorDiagnostics.length === 1 ? "error" : "errors";
-          return callback(
+          callback(
             new AssemblyScriptError(
               `Compilation failed - found ${errorDiagnostics.length} ${errorsWord}.`
             )
           );
+          return 1;
         } else if (error) {
-          return callback(error);
+          callback(error);
+          return 2;
         }
 
         const binary = host.readFile(binaryFileName, baseDir);
@@ -122,19 +110,18 @@ function loader(buffer) {
           : undefined;
 
         if (!binary) {
-          return callback(
+          callback(
             new AssemblyScriptError("Error on compiling AssemblyScript.")
           );
+          return 3;
         }
 
         this.emitFile(binaryFileName, binary, null);
         if (sourceMap) {
           this.emitFile(sourceMapFileName, sourceMap, null);
         }
-        return callback(
-          null,
-          `module.exports = ${JSON.stringify(binaryFileName)}`
-        );
+        callback(null, `module.exports = ${JSON.stringify(binaryFileName)}`);
+        return 0;
       }
     );
   });

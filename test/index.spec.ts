@@ -1,4 +1,4 @@
-const compiler = require("./compiler");
+import { compiler } from "./compiler";
 
 jest.setTimeout(30000);
 
