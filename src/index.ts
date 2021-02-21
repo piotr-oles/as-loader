@@ -1,5 +1,4 @@
 import path from "path";
-import webpack from "webpack";
 import asc from "assemblyscript/cli/asc";
 import { DiagnosticCategory } from "assemblyscript";
 import { getOptions, interpolateName } from "loader-utils";
@@ -11,7 +10,8 @@ import { AssemblyScriptError } from "./error";
 import schema from "./options.json";
 import { addErrorToModule, addWarningToModule } from "./webpack";
 
-function loader(this: webpack.loader.LoaderContext, buffer: Buffer) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function loader(this: any, buffer: Buffer) {
   const options = getOptions(this);
   validate(schema as Schema, options, {
     name: "AssemblyScript Loader",
@@ -27,6 +27,7 @@ function loader(this: webpack.loader.LoaderContext, buffer: Buffer) {
   const {
     name = "[name].[contenthash].wasm",
     context = this.rootContext,
+    raw = false,
     ...ascOptions
   } = options;
 
@@ -116,11 +117,24 @@ function loader(this: webpack.loader.LoaderContext, buffer: Buffer) {
           return 3;
         }
 
-        this.emitFile(binaryFileName, binary, null);
-        if (sourceMap) {
-          this.emitFile(sourceMapFileName, sourceMap, null);
+        if (module.type?.startsWith("webassembly") || raw) {
+          // uses module type: "webassembly/sync" or "webasssembly/async" or raw: true -
+          // return binary instead of emitting files
+          let rawSourceMap: unknown = null;
+          if (sourceMap) {
+            try {
+              rawSourceMap = JSON.parse(sourceMap.toString());
+            } catch (error) {}
+          }
+          callback(null, binary, rawSourceMap);
+        } else {
+          this.emitFile(binaryFileName, binary, null);
+          if (sourceMap) {
+            this.emitFile(sourceMapFileName, sourceMap, null);
+          }
+          callback(null, `module.exports = ${JSON.stringify(binaryFileName)}`);
         }
-        callback(null, `module.exports = ${JSON.stringify(binaryFileName)}`);
+
         return 0;
       }
     );

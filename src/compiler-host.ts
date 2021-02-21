@@ -1,14 +1,12 @@
 import path from "path";
 import asc, { DiagnosticMessage, APIOptions } from "assemblyscript/cli/asc";
-import webpack from "webpack";
 
 type CompilerHost = Required<APIOptions> & {
   getDiagnostics(): DiagnosticMessage[];
 };
 
-function createCompilerHost(
-  context: webpack.loader.LoaderContext
-): CompilerHost {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createCompilerHost(context: any): CompilerHost {
   const memVolume: Record<string, Buffer> = {};
   const stderr = asc.createMemoryStream();
   const stdout = asc.createMemoryStream();
