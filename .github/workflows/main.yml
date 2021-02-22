@@ -110,6 +110,12 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Download build artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: lib
+          path: lib
+
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
