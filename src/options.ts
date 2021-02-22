@@ -1,20 +1,21 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapAscOptionsToArgs(options: Record<string, any>): string[] {
+type Options = Record<string, string | number | boolean | null | string[]>;
+
+function mapAscOptionsToArgs(options: Options): string[] {
   const args = [];
-  for (const key in options) {
-    if (typeof options[key] === "boolean") {
+  const keys = Object.keys(options);
+
+  for (const key of keys) {
+    const value = options[key];
+
+    if (typeof value === "boolean") {
       args.push("--" + key);
-    } else if (
-      typeof options[key] === "string" ||
-      typeof options[key] === "number"
-    ) {
-      args.push("--" + key, String(options[key]));
-    } else if (Array.isArray(options[key])) {
-      args.push("--" + key, options[key].join(","));
-    } else if (typeof options[key] === "object" && options[key] !== null) {
-      args.push(...mapAscOptionsToArgs(options[key]));
+    } else if (typeof value === "string" || typeof value === "number") {
+      args.push("--" + key, String(value));
+    } else if (Array.isArray(value)) {
+      args.push("--" + key, value.join(","));
     }
   }
+
   return args;
 }
 

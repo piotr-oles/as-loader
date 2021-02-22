@@ -5,11 +5,7 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "The filename template for the target file."
-    },
-    "context": {
-      "type": "string",
-      "description": "A custom file context."
+      "description": "Output file name template, `[name].[contenthash].wasm` by default."
     },
     "raw": {
       "type": "boolean",
@@ -53,83 +49,71 @@
       "type": "boolean",
       "description": "Skips validating the module using Binaryen."
     },
-    "features": {
-      "type": "object",
-      "description": "There are several flags that enable or disable specific WebAssembly or compiler features. By default, only the bare minimum is exposed, and fully standardized WebAssembly features will be used.",
-      "properties": {
-        "importMemory": {
-          "type": "boolean",
-          "description": "Imports the memory provided as 'env.memory'."
-        },
-        "noExportMemory": {
-          "type": "boolean",
-          "description": "Does not export the memory as 'memory'."
-        },
-        "initialMemory": {
-          "type": "number",
-          "description": "Sets the initial memory size in pages."
-        },
-        "maximumMemory": {
-          "type": "number",
-          "description": "Sets the maximum memory size in pages."
-        },
-        "sharedMemory": {
-          "type": "boolean",
-          "description": "Declare memory as shared. Requires maximumMemory."
-        },
-        "importTable": {
-          "type": "boolean",
-          "description": "Imports the function table provided as 'env.table'."
-        },
-        "exportTable": {
-          "type": "boolean",
-          "description": "Exports the function table as 'table'."
-        },
-        "explicitStart": {
-          "type": "boolean",
-          "description": "Exports an explicit '_start' function to call."
-        },
-        "enable": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "sign-extension",
-              "bulk-memory",
-              "simd",
-              "threads",
-              "reference-types"
-            ]
-          },
-          "description": "Enables WebAssembly features being disabled by default."
-        },
-        "disable": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["mutable-globals"]
-          },
-          "description": "Disables WebAssembly features being enabled by default."
-        },
-        "lowMemoryLimit": {
-          "type": "boolean",
-          "description": "Enforces very low (<64k) memory constraints."
-        }
-      }
+    "importMemory": {
+      "type": "boolean",
+      "description": "Imports the memory provided as 'env.memory'."
     },
-    "linking": {
-      "type": "object",
-      "description": "Specifying the base offsets of compiler-generated memory respectively the table leaves some space for other data in front. In its current form this is mostly useful to link additional data into an AssemblyScript binary after compilation, be it by populating the binary itself or initializing the data externally upon initialization. One good example is leaving some scratch space for a frame buffer.",
-      "properties": {
-        "memoryBase": {
-          "type": "number",
-          "description": "Sets the start offset of emitted memory segments."
-        },
-        "tableBase": {
-          "type": "number",
-          "description": "Sets the start offset of emitted table elements."
-        }
-      }
+    "noExportMemory": {
+      "type": "boolean",
+      "description": "Does not export the memory as 'memory'."
+    },
+    "initialMemory": {
+      "type": "number",
+      "description": "Sets the initial memory size in pages."
+    },
+    "maximumMemory": {
+      "type": "number",
+      "description": "Sets the maximum memory size in pages."
+    },
+    "sharedMemory": {
+      "type": "boolean",
+      "description": "Declare memory as shared. Requires maximumMemory."
+    },
+    "importTable": {
+      "type": "boolean",
+      "description": "Imports the function table provided as 'env.table'."
+    },
+    "exportTable": {
+      "type": "boolean",
+      "description": "Exports the function table as 'table'."
+    },
+    "explicitStart": {
+      "type": "boolean",
+      "description": "Exports an explicit '_start' function to call."
+    },
+    "enable": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "sign-extension",
+          "bulk-memory",
+          "simd",
+          "threads",
+          "reference-types"
+        ]
+      },
+      "description": "Enables WebAssembly features being disabled by default."
+    },
+    "disable": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["mutable-globals"]
+      },
+      "description": "Disables WebAssembly features being enabled by default."
+    },
+    "lowMemoryLimit": {
+      "type": "boolean",
+      "description": "Enforces very low (<64k) memory constraints."
+    },
+    "memoryBase": {
+      "type": "number",
+      "description": "Sets the start offset of emitted memory segments."
+    },
+    "tableBase": {
+      "type": "number",
+      "description": "Sets the start offset of emitted table elements."
     }
   }
 }
