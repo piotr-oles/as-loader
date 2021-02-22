@@ -1,4 +1,5 @@
 import { compiler } from "./compiler";
+import webpack from "webpack";
 
 jest.setTimeout(30000);
 
@@ -40,21 +41,67 @@ describe("as-loader", () => {
     expect(errors[0]).toContain(
       "AssemblyScriptError: Compilation failed - found 3 errors."
     );
-    expect(errors[0]).toContain(" @ ./broken.ts 1:0-53 2:12-20");
-    expect(errors[1]).toEqual(
-      "./assembly/broken/simple.ts 4:14-15\n" +
-        "Type 'i32' is not assignable to type '~lib/string/String'.\n" +
-        " @ ./broken.ts 1:0-53 2:12-20"
+    expect(errors[1]).toContain("./assembly/broken/simple.ts 4:14-15");
+    expect(errors[1]).toContain(
+      "Type 'i32' is not assignable to type '~lib/string/String'."
     );
-    expect(errors[2]).toEqual(
-      "./assembly/broken/shared.ts 2:14-15\n" +
-        "Type 'i32' is not assignable to type '~lib/string/String'.\n" +
-        " @ ./broken.ts 1:0-53 2:12-20"
+    expect(errors[2]).toContain("./assembly/broken/shared.ts 2:14-15");
+    expect(errors[2]).toContain(
+      "Type 'i32' is not assignable to type '~lib/string/String'."
     );
-    expect(errors[3]).toEqual(
-      "./assembly/broken/shared.ts 2:10-15\n" +
-        "Type '~lib/string/String' is not assignable to type 'i32'.\n" +
-        " @ ./broken.ts 1:0-53 2:12-20"
+    expect(errors[3]).toContain("./assembly/broken/shared.ts 2:10-15");
+    expect(errors[3]).toContain(
+      "Type '~lib/string/String' is not assignable to type 'i32'."
     );
+  });
+
+  it("loads using webassembly/sync type", async () => {
+    if (!webpack.version?.startsWith("5")) {
+      console.log(
+        `skipping test for webpack v${webpack.version} - requires min v5.0.0`
+      );
+      return;
+    }
+    const stats = await compiler(
+      "async.ts",
+      { type: "webassembly/sync" },
+      { devtool: "source-map", experiments: { syncWebAssembly: true } }
+    );
+
+    expect(Object.keys(stats.compilation.assets)).toEqual(
+      expect.arrayContaining([
+        "main.js",
+        "main.js.map",
+        "assembly_correct_simple_ts.js",
+        expect.stringMatching(/.*\.wasm/),
+      ])
+    );
+    expect(stats.compilation.warnings).toHaveLength(0);
+    expect(stats.compilation.errors).toHaveLength(0);
+  });
+
+  it("loads using webassembly/async type", async () => {
+    if (!webpack.version?.startsWith("5")) {
+      console.log(
+        `skipping test for webpack v${webpack.version} - requires min v5.0.0`
+      );
+      return;
+    }
+    const stats = await compiler(
+      "async.ts",
+      { type: "webassembly/async" },
+      { devtool: "source-map", experiments: { asyncWebAssembly: true } }
+    );
+
+    expect(Object.keys(stats.compilation.assets)).toEqual(
+      expect.arrayContaining([
+        "main.js",
+        "main.js.map",
+        "assembly_correct_simple_ts.js",
+        expect.stringMatching(/.*\.wasm/),
+      ])
+    );
+    expect(stats.compilation.warnings).toHaveLength(0);
+    expect(stats.compilation.errors).toHaveLength(0);
   });
 });

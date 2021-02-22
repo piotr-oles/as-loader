@@ -45,10 +45,7 @@ jobs:
       matrix:
         node: [10, 12, 14]
         os: [ubuntu-latest]
-        webpack: [
-          webpack@^4.0.0,
-          # webpack@^5.0.0 TODO - add support
-        ]
+        webpack: [webpack@^4.0.0, webpack@^5.0.0]
     steps:
     - uses: actions/checkout@v1
 

@@ -11,6 +11,10 @@
       "type": "string",
       "description": "A custom file context."
     },
+    "raw": {
+      "type": "boolean",
+      "description": "Return binary instead of emitting file."
+    },
     "optimizeLevel": {
       "type": "number",
       "minimum": 0,
