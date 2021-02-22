@@ -23,10 +23,10 @@ function loader(this: any, buffer: Buffer) {
   let isDone = false;
 
   const module = this._module;
+  const context = this.rootContext;
 
   const {
     name = "[name].[contenthash].wasm",
-    context = this.rootContext,
     raw = false,
     ...ascOptions
   } = options;
