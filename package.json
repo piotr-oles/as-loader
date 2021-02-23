@@ -6,6 +6,7 @@
   "repository": "git@github.com:piotr-oles/as-loader.git",
   "author": "Piotr Oleś <piotrek.oles@gmail.com>",
   "license": "MIT",
+  "keywords": ["assemblyscript", "webpack", "webassembly", "wasm", "loader"],
   "scripts": {
     "build": "tsc",
     "lint": "eslint src test",
