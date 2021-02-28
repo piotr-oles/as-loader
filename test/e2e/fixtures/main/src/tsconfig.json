@@ -7,6 +7,7 @@
     "skipLibCheck": true
   },
   "include": [
+    "./async.ts",
     "./correct.ts",
     "./broken.ts"
   ],

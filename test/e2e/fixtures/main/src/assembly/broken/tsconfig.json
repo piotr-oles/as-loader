@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../../tsconfig.json",
   "include": [
     "./simple.ts",
     "../../../../node_modules/assemblyscript/std/assembly/index.d.ts"
