@@ -63,6 +63,10 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFiles": ["<rootDir>/test/setup.ts"]
+  },
+  "engines": {
+    "node": ">=10"
   }
 }
