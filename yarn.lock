@@ -4156,10 +4156,10 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
-karton@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/karton/-/karton-0.4.0.tgz#2717c774e8b9f4382679bf1592b1a03cc35fcef5"
-  integrity sha512-3fee+r7lZ4jR+12f9cC6US7GCmtyMYeRW20p5xPqWIKrQZreCIcO1ncyEEBEYq8E/1bWRNcT92uAWQDhe060mA==
+karton@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/karton/-/karton-0.4.1.tgz#2efd467146cb3c80f01c87646c815b27b8f41c85"
+  integrity sha512-16KKRlqgsJq2xGW2H/xFuYx0SQK2sgOiR2/Nff94ne7fS1Ah5spmgQvvhkuvCFTLFP1vSH9UqA5Tg2cIN/nUSA==
   dependencies:
     chalk "^4.1.0"
     cross-spawn "^7.0.3"

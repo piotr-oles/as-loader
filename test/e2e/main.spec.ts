@@ -9,6 +9,9 @@ import { instantiate } from "@assemblyscript/loader/umd";
 
 jest.setTimeout(60000);
 
+const WEBPACK_4 = "4.46.0";
+const WEBPACK_5 = "5.24.2";
+
 describe("as-loader", () => {
   let sandbox: Sandbox;
 
@@ -30,7 +33,7 @@ describe("as-loader", () => {
   });
 
   describe("single compilation", () => {
-    it.each([[{ webpack: "^4.0.0" }], [{ webpack: "^5.0.0" }]])(
+    it.each([[{ webpack: WEBPACK_4 }], [{ webpack: WEBPACK_5 }]])(
       "works without options with %p",
       async (dependencies) => {
         await sandbox.load(path.resolve(__dirname, "fixtures/main"));
@@ -38,7 +41,6 @@ describe("as-loader", () => {
 
         const results = await sandbox.exec("yarn webpack");
 
-        expect(results).toContain("Compilation finished");
         expect(results).toContain("simple.wasm");
         expect(results).toContain("simple.wasm.map");
         expect(results).toContain("main.js");
@@ -60,7 +62,7 @@ describe("as-loader", () => {
       }
     );
 
-    it.each([[{ webpack: "^4.0.0" }], [{ webpack: "^5.0.0" }]])(
+    it.each([[{ webpack: WEBPACK_4 }], [{ webpack: WEBPACK_5 }]])(
       "reports errors in project with %p",
       async (dependencies) => {
         await sandbox.load(path.resolve(__dirname, "fixtures/main"));
@@ -107,7 +109,7 @@ describe("as-loader", () => {
       ["webassembly/async", "asyncWebAssembly"],
     ])("loads using %s type", async (type, experiment) => {
       await sandbox.load(path.resolve(__dirname, "fixtures/main"));
-      await sandbox.install("yarn", { webpack: "^5.0.0" });
+      await sandbox.install("yarn", { webpack: WEBPACK_5 });
 
       await sandbox.patch(
         "webpack.config.js",
@@ -132,7 +134,6 @@ describe("as-loader", () => {
 
       const results = await sandbox.exec("yarn webpack");
 
-      expect(results).toContain("Compilation finished");
       expect(results).toContain("main.js");
       expect(results).toContain(".wasm");
 
@@ -154,7 +155,7 @@ describe("as-loader", () => {
   });
 
   describe("watch compilation", () => {
-    it.each([[{ webpack: "^4.0.0" }], [{ webpack: "^5.0.0" }]])(
+    it.each([[{ webpack: WEBPACK_4 }], [{ webpack: WEBPACK_5 }]])(
       "re-compiles wasm file on change with %p",
       async (dependencies) => {
         await sandbox.load(path.resolve(__dirname, "fixtures/main"));
@@ -164,8 +165,10 @@ describe("as-loader", () => {
           await sandbox.spawn("yarn webpack --watch")
         );
 
-        await webpack.waitForStdoutIncludes("Compilation finished");
-        await webpack.waitForStdoutIncludes("simple.wasm");
+        await webpack.waitForStdoutIncludes([
+          "simple.wasm ",
+          "simple.wasm.map ",
+        ]);
 
         expect(await sandbox.exists("dist/simple.wasm")).toBe(true);
         expect(await sandbox.exists("dist/simple.wasm.map")).toBe(true);
@@ -173,8 +176,10 @@ describe("as-loader", () => {
         // update assembly script file
         await sandbox.patch("src/assembly/correct/shared.ts", "a + b", "a - b");
 
-        await webpack.waitForStdoutIncludes("Compilation starting...");
-        await webpack.waitForStdoutIncludes("Compilation finished");
+        await webpack.waitForStdoutIncludes([
+          "simple.wasm ",
+          "simple.wasm.map ",
+        ]);
 
         const simpleWasm = await sandbox.read(`dist/simple.wasm`);
         const simpleWasmInstance = await instantiate<
@@ -185,7 +190,7 @@ describe("as-loader", () => {
       }
     );
 
-    it.each([[{ webpack: "^4.0.0" }], [{ webpack: "^5.0.0" }]])(
+    it.each([[{ webpack: WEBPACK_4 }], [{ webpack: WEBPACK_5 }]])(
       "reports errors on change with %p",
       async (dependencies) => {
         await sandbox.load(path.resolve(__dirname, "fixtures/main"));
@@ -195,8 +200,7 @@ describe("as-loader", () => {
           await sandbox.spawn("yarn webpack --watch")
         );
 
-        await webpack.waitForStdoutIncludes("Compilation finished");
-        await webpack.waitForStdoutIncludes("simple.wasm");
+        await webpack.waitForStdoutIncludes("simple.wasm ");
 
         // update assembly script file
         await sandbox.patch(
@@ -205,7 +209,6 @@ describe("as-loader", () => {
           "a: string"
         );
 
-        await webpack.waitForStdoutIncludes("Compilation starting...");
         await webpack.waitForStdoutIncludes([
           "AssemblyScriptError: Compilation failed - found 3 errors.",
           [
@@ -224,7 +227,6 @@ describe("as-loader", () => {
 
         await sandbox.patch("src/assembly/correct/shared.ts", "a + b", "a - b");
 
-        await webpack.waitForStdoutIncludes("Compilation starting...");
         await webpack.waitForStdoutIncludes(
           "AssemblyScriptError: Compilation failed - found 2 errors."
         );
@@ -234,8 +236,8 @@ describe("as-loader", () => {
           "a: string",
           "a: i32"
         );
-        await webpack.waitForStdoutIncludes("Compilation starting...");
-        await webpack.waitForStdoutIncludes("Compilation finished");
+
+        await webpack.waitForStdoutIncludes("simple.wasm ");
 
         const simpleWasm = await sandbox.read(`dist/simple.wasm`);
         const simpleWasmInstance = await instantiate<

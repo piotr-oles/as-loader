@@ -69,7 +69,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: test/e2e/__locks__
-        key: ${{ runner.os }}
+        key: ${{ runner.os }}-karton
 
     - name: Install dependencies
       run: yarn install --frozen-lockfile
