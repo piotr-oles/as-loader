@@ -62,7 +62,9 @@ class AssemblyScriptError extends Error {
     }
 
     const baseUrl = path.relative(context, baseDir);
-    const file = fileName ? `./${path.join(baseUrl, fileName)}` : undefined;
+    const file = fileName
+      ? `./${path.join(baseUrl, fileName).replace(/\\/g, "/")}`
+      : undefined;
 
     return new AssemblyScriptError(diagnostic.message, file, location);
   }
