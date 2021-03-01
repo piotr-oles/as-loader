@@ -45,20 +45,19 @@ describe("as-loader", () => {
         expect(results).toContain("simple.wasm.map");
         expect(results).toContain("main.js");
 
-        const simpleWasm = await sandbox.read("dist/simple.wasm");
+        const simpleWasmInstance = await instantiate<
+          typeof import("./fixtures/main/src/assembly/correct/simple")
+        >(await sandbox.read("dist/simple.wasm"));
+
+        expect(simpleWasmInstance.exports.run()).toEqual(15);
+
         const simpleWasmMap = await sandbox.read(
           "dist/simple.wasm.map",
           "utf8"
         );
-
-        expect(simpleWasm.toString("hex")).toMatchSnapshot();
-        expect(simpleWasmMap).toMatchSnapshot();
-
-        const simpleWasmInstance = await instantiate<
-          typeof import("./fixtures/main/src/assembly/correct/simple")
-        >(simpleWasm);
-
-        expect(simpleWasmInstance.exports.run()).toEqual(15);
+        expect(Object.keys(JSON.parse(simpleWasmMap))).toEqual(
+          expect.arrayContaining(["version", "sources", "names", "mappings"])
+        );
       }
     );
 
@@ -142,13 +141,10 @@ describe("as-loader", () => {
         (dirent) => dirent.isFile() && dirent.name.endsWith(".wasm")
       );
       expect(simpleWasmDirent).toBeDefined();
-      const simpleWasm = await sandbox.read(`dist/${simpleWasmDirent?.name}`);
-
-      expect(simpleWasm.toString("hex")).toMatchSnapshot();
 
       const simpleWasmInstance = await instantiate<
         typeof import("./fixtures/main/src/assembly/correct/simple")
-      >(simpleWasm);
+      >(await sandbox.read(`dist/${simpleWasmDirent?.name}`));
 
       expect(simpleWasmInstance.exports.run()).toEqual(15);
     });
@@ -181,10 +177,9 @@ describe("as-loader", () => {
           "simple.wasm.map ",
         ]);
 
-        const simpleWasm = await sandbox.read(`dist/simple.wasm`);
         const simpleWasmInstance = await instantiate<
           typeof import("./fixtures/main/src/assembly/correct/simple")
-        >(simpleWasm);
+        >(await sandbox.read(`dist/simple.wasm`));
 
         expect(simpleWasmInstance.exports.run()).toEqual(-5);
       }
