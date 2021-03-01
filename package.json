@@ -1,12 +1,18 @@
 {
   "name": "as-loader",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "AssemblyScript loader for webpack",
   "main": "lib/index.js",
   "repository": "git@github.com:piotr-oles/as-loader.git",
   "author": "Piotr Oleś <piotrek.oles@gmail.com>",
   "license": "MIT",
-  "keywords": ["assemblyscript", "webpack", "webassembly", "wasm", "loader"],
+  "keywords": [
+    "assemblyscript",
+    "webpack",
+    "webassembly",
+    "wasm",
+    "loader"
+  ],
   "scripts": {
     "build": "tsc",
     "lint": "eslint src test",
