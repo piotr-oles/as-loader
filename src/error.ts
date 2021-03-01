@@ -1,23 +1,35 @@
 import path from "path";
 import { DiagnosticMessage } from "assemblyscript/cli/asc";
 import { getLineColumnFromIndex } from "./line-column";
-import { formatLocation, Location } from "./location";
+import { Location } from "./location";
 import { CompilerHost } from "./compiler-host";
 
+interface ArtificialModule {
+  identifier(): string;
+  readableIdentifier(): string;
+}
+
 class AssemblyScriptError extends Error {
-  readonly file: string | undefined;
+  readonly loc: Location | undefined;
+  readonly module: ArtificialModule | undefined;
 
   constructor(message: string, file?: string, location?: Location) {
     super(message);
+    Object.setPrototypeOf(this, AssemblyScriptError.prototype);
 
     this.name = "AssemblyScriptError";
     this.message = message;
-    this.file = file;
+    this.loc = location;
 
-    // webpack 4 quirks...
-    if (location && (location.start || location.end)) {
-      this.file += ` ${formatLocation(location)}`;
-    }
+    // webpack quirks...
+    this.module = {
+      identifier() {
+        return file || "";
+      },
+      readableIdentifier() {
+        return file || "";
+      },
+    };
 
     Error.captureStackTrace(this, this.constructor);
   }
@@ -50,7 +62,9 @@ class AssemblyScriptError extends Error {
     }
 
     const baseUrl = path.relative(context, baseDir);
-    const file = fileName ? `./${path.join(baseUrl, fileName)}` : undefined;
+    const file = fileName
+      ? `./${path.join(baseUrl, fileName).replace(/\\/g, "/")}`
+      : undefined;
 
     return new AssemblyScriptError(diagnostic.message, file, location);
   }
