@@ -1,5 +1,7 @@
 interface LineColumn {
+  // 1-based line
   line: number;
+  // 1-based column
   column: number;
 }
 
@@ -12,8 +14,8 @@ function getLineColumnFromIndex(
   }
 
   let line = 1;
-  let prevLineIndex = 0;
-  let nextLineIndex = source.indexOf("\n", prevLineIndex);
+  let prevLineIndex = -1;
+  let nextLineIndex = source.indexOf("\n");
 
   while (nextLineIndex !== -1 && index > nextLineIndex) {
     prevLineIndex = nextLineIndex;

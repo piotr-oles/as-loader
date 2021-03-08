@@ -7,7 +7,7 @@ import { Schema } from "schema-utils/declarations/validate";
 import { createCompilerHost } from "./compiler-host";
 import { mapAscOptionsToArgs } from "./options";
 import { AssemblyScriptError } from "./error";
-import schema from "./options.json";
+import schema from "./schema.json";
 import { addErrorToModule, addWarningToModule } from "./webpack";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
