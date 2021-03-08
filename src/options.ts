@@ -8,7 +8,10 @@ function mapAscOptionsToArgs(options: Options): string[] {
     const value = options[key];
 
     if (typeof value === "boolean") {
-      args.push("--" + key);
+      if (value) {
+        // add flag only if value is true
+        args.push("--" + key);
+      }
     } else if (typeof value === "string" || typeof value === "number") {
       args.push("--" + key, String(value));
     } else if (Array.isArray(value)) {
