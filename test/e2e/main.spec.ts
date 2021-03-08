@@ -243,4 +243,56 @@ describe("as-loader", () => {
       }
     );
   });
+
+  describe("options", () => {
+    it("passes options to assemblyscript compiler", async () => {
+      await sandbox.load(path.resolve(__dirname, "fixtures/main"));
+      await sandbox.install("yarn", { webpack: WEBPACK_5 });
+
+      await sandbox.patch(
+        "webpack.config.js",
+        '          name: "[name].wasm",',
+        [
+          '          name: "[name].wasm",',
+          "          optimizeLevel: 2,",
+          "          shrinkLevel: 1,",
+          "          coverage: true,",
+          "          noAssert: true,",
+          '          runtime: "stub",',
+          "          debug: true,",
+          '          trapMode: "allow",',
+          "          noValidate: true,",
+          "          importMemory: false,",
+          "          noExportMemory: true,",
+          "          initialMemory: 1000,",
+          "          maximumMemory: 2000,",
+          "          sharedMemory: true,",
+          "          importTable: false,",
+          "          exportTable: false,",
+          "          explicitStart: false,",
+          '          enable: ["simd", "threads"],',
+          '          disable: ["mutable-globals"],',
+          "          lowMemoryLimit: false,",
+          "          memoryBase: 1024,",
+          "          tableBase: 0,",
+        ].join("\n")
+      );
+
+      const results = await sandbox.exec("yarn webpack");
+      expect(results).toContain("simple.wasm");
+      expect(results).toContain("simple.wasm.map");
+      expect(results).toContain("main.js");
+
+      const simpleWasmInstance = await instantiate<
+        typeof import("./fixtures/main/src/assembly/correct/simple")
+      >(await sandbox.read("dist/simple.wasm"));
+
+      expect(simpleWasmInstance.exports.run()).toEqual(15);
+
+      const simpleWasmMap = await sandbox.read("dist/simple.wasm.map", "utf8");
+      expect(Object.keys(JSON.parse(simpleWasmMap))).toEqual(
+        expect.arrayContaining(["version", "sources", "names", "mappings"])
+      );
+    });
+  });
 });
