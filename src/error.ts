@@ -1,8 +1,12 @@
 import path from "path";
 import { DiagnosticMessage } from "assemblyscript/cli/asc";
-import { getLineColumnFromIndex } from "./line-column";
-import { Location } from "./location";
+import { getLineColumnFromIndex, LineColumn } from "./line-column";
 import { CompilerHost } from "./compiler-host";
+
+interface Location {
+  start?: LineColumn;
+  end?: LineColumn;
+}
 
 interface ArtificialModule {
   identifier(): string;
