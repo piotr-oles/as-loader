@@ -1,4 +1,4 @@
-import { getLineColumnFromIndex } from "../../src/line-column";
+import { getLineColumnFromIndex } from "../../loader/line-column";
 
 const AS_SOURCE = [
   "export function add(a: i32, b: i32): i32 {",

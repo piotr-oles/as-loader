@@ -2,7 +2,7 @@
   "name": "as-loader",
   "version": "0.1.2",
   "description": "AssemblyScript loader for webpack",
-  "main": "lib/index.js",
+  "main": "loader/index.js",
   "repository": "git@github.com:piotr-oles/as-loader.git",
   "author": "Piotr Oleś <piotrek.oles@gmail.com>",
   "license": "MIT",
@@ -20,7 +20,8 @@
     "release": "auto shipit"
   },
   "files": [
-    "lib/*"
+    "loader/*",
+    "runtime/*"
   ],
   "peerDependencies": {
     "assemblyscript": "^0.18.0",

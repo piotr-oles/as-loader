@@ -33,10 +33,12 @@ jobs:
         run: yarn build
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
-          name: lib
-          path: lib
+          name: artifact
+          path: |
+            loader
+            runtime
 
   test:
     runs-on: ${{ matrix.os }}
@@ -75,10 +77,9 @@ jobs:
       run: yarn install --frozen-lockfile
 
     - name: Download build artifact
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2
       with:
-        name: lib
-        path: lib
+        name: artifact
 
     - name: Run unit tests
       run: yarn test unit
@@ -116,10 +117,9 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Download build artifact
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
-          name: lib
-          path: lib
+          name: artifact
 
       - name: Release
         env:

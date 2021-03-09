@@ -1,4 +1,4 @@
-import { mapAscOptionsToArgs } from "../../src/options";
+import { mapAscOptionsToArgs } from "../../loader/options";
 
 describe("options", () => {
   it.each([
