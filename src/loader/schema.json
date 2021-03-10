@@ -11,6 +11,10 @@
       "type": "boolean",
       "description": "Return binary instead of emitting file."
     },
+    "fallback": {
+      "type": "boolean",
+      "description": "Use fallback JavaScript file if WebAssembly is not supported."
+    },
     "optimizeLevel": {
       "type": "number",
       "minimum": 0,

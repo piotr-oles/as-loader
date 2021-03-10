@@ -15,7 +15,7 @@
 ## Installation
 
 This loader requires minimum [AssemblyScript  0.18](https://github.com/AssemblyScript/assemblyscript), 
-Node.js 10 and [webpack 4 or webpack 5](https://github.com/webpack/webpack)
+Node.js 12 and [webpack 4 or webpack 5](https://github.com/webpack/webpack)
 
 ```sh
 # with npm
@@ -57,61 +57,57 @@ module.exports = {
 
 By default, the loader emits `.wasm` file (+ `.wasm.map` if source maps are enabled) and 
 creates CommonJS module that exports URL to the emitted `.wasm` file.
+
+If you enable `fallback` option, the loader will also emit `.js` file (+ `.js.map` if source maps are enabled)
+and will expose async `fallback()` function which dynamically imports fallback module.
+
+To simplify loading logic, you can use `as-loader/runtime/` loaders which uses
+`@assemblyscript/loader` under the hood. Available loaders are: `web`, `node`.
+These loaders will check for WebAssembly support, and will use fallback if available.
+They will also ensure correct typings.
+
 ```typescript
 import * as myModule from "./assembly/myModule";
-import { instantiateStreaming } from "@assemblyscript/loader";
+import { instantiate } from "as-loader/runtime/web";
 
 async function loadAndRun() {
-  const module = await instantiateStreaming<typeof myModule>(
-    // workaround for TypeScript
-    fetch((myModule as unknown) as string)
-  );
-  module.exports.myFunction(100);
+  const myModuleInstance = await instantiate(myModule);
+
+  myModuleInstance.exports.myFunction(100);
 }
 
 loadAndRun();
 ```
-You can also use it with experimental webpack features: `syncWebAssembly` and `asyncWebAssembly`
-
 <details>
-<summary>Configuration example for syncWebAssembly</summary>
+<summary>Alternatively, you can use exported URL directly:</summary>
 
-```js
-// webpack.config.js
-module.exports = {
-  entry: "src/index.ts",
-  resolve: {
-    extensions: [".ts", ".js"],
-  },
-  module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        include: path.resolve(__dirname, "src/assembly"),
-        loader: "as-loader",
-        type: "webassembly/sync"
-      },
-      {
-        test: /\.ts$/,
-        exclude: path.resolve(__dirname, "src/assembly"),
-        loader: "ts-loader",
-      },
-    ],
-  },
-  experiments: { 
-    syncWebAssembly: true
-  }
-};
+```typescript
+import * as myModule from "./assembly/myModule";
+import { instantiate } from "@assemblyscript/loader";
+
+async function loadAndRun() {
+  const myModuleInstance = await instantiate<typeof myModule>(
+    // workaround for TypeScript
+    fetch((myModule as unknown) as string)
+  );
+
+  myModuleInstance.exports.myFunction(100);
+}
+
+loadAndRun();
+
 ```
+
 </details>
 
 ## Options
 #### Loader Options
 
-| Name   | Type    | Description |
-|--------|---------| ----------- |
-| `name` | string  | Output asset name template, `[name].[contenthash].wasm` by default. |
-| `raw`  | boolean | If true, returns binary instead of emitting file. Use for chaining with other loaders. |
+| Name       | Type    | Description |
+|------------|---------| ----------- |
+| `name`     | string  | Output asset name template, `[name].[contenthash].wasm` by default. |
+| `raw`      | boolean | If true, returns binary instead of emitting file. Use for chaining with other loaders. |
+| `fallback` | boolean | If true, creates additional JavaScript file which can be used if WebAssembly is not supported. |
 
 #### Compiler Options
 

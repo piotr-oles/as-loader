@@ -28,5 +28,11 @@ module.exports = {
         "node/no-missing-import": "off",
       },
     },
+    {
+      files: ["test/e2e/fixtures/**/*.ts"],
+      rules: {
+        "node/no-missing-import": "off",
+      },
+    },
   ],
 };

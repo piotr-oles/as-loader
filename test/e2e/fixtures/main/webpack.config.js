@@ -5,8 +5,10 @@ module.exports = {
   devtool: "source-map",
   context: __dirname,
   entry: "./src/correct.ts",
+  target: "node",
   output: {
     path: path.resolve(__dirname, "./dist"),
+    publicPath: "./dist/"
   },
   resolve: {
     extensions: [".ts", ".js"],

@@ -7,7 +7,7 @@ import {
 } from "karton";
 import { instantiate } from "@assemblyscript/loader/umd";
 
-jest.setTimeout(60000);
+jest.setTimeout(120000);
 
 const WEBPACK_4 = "4.46.0";
 const WEBPACK_5 = "5.24.2";
@@ -39,11 +39,11 @@ describe("as-loader", () => {
         await sandbox.load(path.resolve(__dirname, "fixtures/main"));
         await sandbox.install("yarn", dependencies);
 
-        const results = await sandbox.exec("yarn webpack");
+        const webpackResults = await sandbox.exec("yarn webpack");
 
-        expect(results).toContain("simple.wasm");
-        expect(results).toContain("simple.wasm.map");
-        expect(results).toContain("main.js");
+        expect(webpackResults).toContain("simple.wasm");
+        expect(webpackResults).toContain("simple.wasm.map");
+        expect(webpackResults).toContain("main.js");
 
         const simpleWasmInstance = await instantiate<
           typeof import("./fixtures/main/src/assembly/correct/simple")
@@ -58,6 +58,9 @@ describe("as-loader", () => {
         expect(Object.keys(JSON.parse(simpleWasmMap))).toEqual(
           expect.arrayContaining(["version", "sources", "names", "mappings"])
         );
+
+        const mainResults = await sandbox.exec("node ./dist/main.js");
+        expect(mainResults).toEqual("15\n");
       }
     );
 
@@ -78,7 +81,7 @@ describe("as-loader", () => {
         expect(results).toContain(
           [
             "ERROR in ./src/assembly/broken/simple.ts",
-            "Module build failed (from ./node_modules/as-loader/lib/index.js):",
+            "Module build failed (from ./node_modules/as-loader/loader/index.js):",
             "AssemblyScriptError: Compilation failed - found 3 errors.",
           ].join("\n")
         );
@@ -131,10 +134,10 @@ describe("as-loader", () => {
         ].join("\n")
       );
 
-      const results = await sandbox.exec("yarn webpack");
+      const webpackResults = await sandbox.exec("yarn webpack");
 
-      expect(results).toContain("main.js");
-      expect(results).toContain(".wasm");
+      expect(webpackResults).toContain("main.js");
+      expect(webpackResults).toContain(".wasm");
 
       const distDirents = await sandbox.list("dist");
       const simpleWasmDirent = distDirents.find(
@@ -147,7 +150,51 @@ describe("as-loader", () => {
       >(await sandbox.read(`dist/${simpleWasmDirent?.name}`));
 
       expect(simpleWasmInstance.exports.run()).toEqual(15);
+
+      const mainResults = await sandbox.exec("node ./dist/main.js");
+      expect(mainResults).toEqual("15\n");
     });
+
+    it.each([[{ webpack: WEBPACK_4 }], [{ webpack: WEBPACK_5 }]])(
+      "creates js file for fallback option with %p",
+      async (dependencies) => {
+        await sandbox.load(path.resolve(__dirname, "fixtures/main"));
+        await sandbox.install("yarn", dependencies);
+
+        await sandbox.patch(
+          "webpack.config.js",
+          '  entry: "./src/correct.ts",',
+          '  entry: "./src/fallback.ts",'
+        );
+        await sandbox.patch(
+          "webpack.config.js",
+          '          name: "[name].wasm",',
+          ['          name: "[name].wasm",', "          fallback: true,"].join(
+            "\n"
+          )
+        );
+
+        const webpackResults = await sandbox.exec("yarn webpack");
+
+        expect(webpackResults).toContain("simple.js");
+        expect(webpackResults).toContain("simple.wasm");
+        expect(webpackResults).toContain("simple.wasm.map");
+        expect(webpackResults).toContain("main.js");
+
+        expect(await sandbox.exists("dist/simple.js")).toEqual(true);
+        expect(await sandbox.exists("dist/simple.wasm")).toEqual(true);
+        expect(await sandbox.exists("dist/simple.js.map")).toEqual(true);
+        expect(await sandbox.exists("dist/simple.wasm.map")).toEqual(true);
+
+        const simpleJsMap = await sandbox.read("dist/simple.js.map", "utf8");
+        expect(Object.keys(JSON.parse(simpleJsMap))).toEqual(
+          expect.arrayContaining(["version", "sources", "names", "mappings"])
+        );
+
+        const mainResults = await sandbox.exec("node ./dist/main.js");
+        expect(mainResults).toEqual("15\n");
+      }
+    );
   });
 
   describe("watch compilation", () => {
