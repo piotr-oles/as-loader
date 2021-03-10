@@ -15,7 +15,7 @@
 ## Installation
 
 This loader requires minimum [AssemblyScript  0.18](https://github.com/AssemblyScript/assemblyscript), 
-Node.js 10 and [webpack 4 or webpack 5](https://github.com/webpack/webpack)
+Node.js 12 and [webpack 4 or webpack 5](https://github.com/webpack/webpack)
 
 ```sh
 # with npm

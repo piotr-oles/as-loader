@@ -7,7 +7,7 @@ import {
 } from "karton";
 import { instantiate } from "@assemblyscript/loader/umd";
 
-jest.setTimeout(60000);
+jest.setTimeout(120000);
 
 const WEBPACK_4 = "4.46.0";
 const WEBPACK_5 = "5.24.2";

@@ -71,12 +71,9 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/test/setup.ts"
-    ]
+    "testEnvironment": "node"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   }
 }
