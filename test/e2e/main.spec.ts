@@ -195,6 +195,48 @@ describe("as-loader", () => {
         expect(mainResults).toEqual("15\n");
       }
     );
+
+    it.each([[{ webpack: WEBPACK_4 }], [{ webpack: WEBPACK_5 }]])(
+      "sets correct [contenthash] with %p",
+      async (dependencies) => {
+        await sandbox.load(path.resolve(__dirname, "fixtures/main"));
+        await sandbox.install("yarn", dependencies);
+
+        await sandbox.patch(
+          "webpack.config.js",
+          '          name: "[name].wasm",',
+          '          name: "[name].[contenthash].wasm",'
+        );
+
+        const webpackResults = await sandbox.exec("yarn webpack");
+
+        const simpleWasmFileName = path.join(
+          "dist",
+          (await sandbox.list("dist")).find((dirent) =>
+            dirent.name.endsWith(".wasm")
+          )?.name
+        );
+        const simpleWasmSourceMapFileName = path.join(
+          "dist",
+          (await sandbox.list("dist")).find((dirent) =>
+            dirent.name.endsWith(".wasm.map")
+          )?.name
+        );
+
+        expect(simpleWasmFileName).toMatch(/simple\.[0-9a-f]+\.wasm$/);
+        expect(simpleWasmSourceMapFileName).toMatch(
+          /simple\.[0-9a-f]+\.wasm\.map$/
+        );
+
+        expect(webpackResults).toContain(path.basename(simpleWasmFileName));
+        expect(webpackResults).toContain(
+          path.basename(simpleWasmSourceMapFileName)
+        );
+
+        const mainResults = await sandbox.exec("node ./dist/main.js");
+        expect(mainResults).toEqual("15\n");
+      }
+    );
   });
 
   describe("watch compilation", () => {

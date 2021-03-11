@@ -1,7 +1,7 @@
 import path from "path";
 import asc from "assemblyscript/cli/asc";
 import { DiagnosticCategory } from "assemblyscript";
-import { getOptions, interpolateName } from "loader-utils";
+import { getOptions, interpolateName, OptionObject } from "loader-utils";
 import { validate } from "schema-utils";
 import { Schema } from "schema-utils/declarations/validate";
 import { createCompilerHost } from "./compiler-host";
@@ -11,6 +11,14 @@ import schema from "./schema.json";
 import { addErrorToModule, addWarningToModule } from "./webpack";
 
 const SUPPORTED_EXTENSIONS = [".wasm", ".js"];
+
+interface LoaderOptions {
+  readonly name?: string;
+  readonly raw?: boolean;
+  readonly fallback?: boolean;
+}
+
+type CompilerOptions = OptionObject;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function loader(this: any, buffer: Buffer) {
@@ -32,25 +40,21 @@ function loader(this: any, buffer: Buffer) {
     raw = false,
     fallback = false,
     ...ascOptions
-  } = options;
+  } = options as LoaderOptions & CompilerOptions;
 
-  if (
-    !SUPPORTED_EXTENSIONS.some((extension) => String(name).endsWith(extension))
-  ) {
+  if (!SUPPORTED_EXTENSIONS.some((extension) => name.endsWith(extension))) {
     throw new Error(
       `Unsupported extension in name: "${name}" option in as-loader. ` +
         `Supported extensions are ${SUPPORTED_EXTENSIONS.join(", ")}`
     );
   }
 
-  const interpolatedName = interpolateName(this, String(name), {
+  const shouldGenerateSourceMap = this.sourceMap;
+  const baseDir = path.dirname(this.resourcePath);
+  const outFileName = interpolateName(this, name, {
     context,
     content: buffer.toString(),
   });
-
-  const shouldGenerateSourceMap = this.sourceMap;
-  const baseDir = path.dirname(this.resourcePath);
-  const outFileName = interpolatedName;
   const sourceMapFileName = outFileName + ".map";
 
   if (fallback) {
@@ -154,17 +158,39 @@ function loader(this: any, buffer: Buffer) {
               }
               callback(null, outFileContent, rawSourceMap);
             } else {
-              this.emitFile(outFileName, outFileContent, null);
+              const hashedOutFileName = interpolateName(this, name, {
+                context,
+                content: Buffer.isBuffer(outFileContent)
+                  ? outFileContent.toString("hex")
+                  : outFileContent,
+              });
+              this.emitFile(hashedOutFileName, outFileContent, null, {
+                minimized: true,
+                immutable: /\[([^:\]]+:)?(hash|contenthash)(:[^\]]+)?]/gi.test(
+                  name
+                ),
+                sourceFilename: path
+                  .relative(this.rootContext, this.resourcePath)
+                  .replace(/\\/g, "/"),
+              });
               if (sourceMapFileContent) {
-                this.emitFile(sourceMapFileName, sourceMapFileContent, null);
+                this.emitFile(sourceMapFileName, sourceMapFileContent, null, {
+                  // we can't easily re-write link from wasm to source map and because of that,
+                  // we can't use [contenthash] for source map file name
+                  immutable: false,
+                  development: true,
+                });
               }
 
               if (fallback) {
-                const fallbackRequest = `as-loader?name=${String(name).replace(
+                const fallbackRequest = `as-loader?name=${name.replace(
                   /\.wasm$/,
                   ".js"
                 )}!${this.resourcePath}`;
-                const fallbackChunkName = outFileName.replace(/\.wasm$/, "");
+                const fallbackChunkName = hashedOutFileName.replace(
+                  /\.wasm$/,
+                  ""
+                );
 
                 callback(
                   null,
@@ -178,7 +204,7 @@ function loader(this: any, buffer: Buffer) {
                     `  );`,
                     `}`,
                     `var path = new String(__webpack_public_path__ + ${JSON.stringify(
-                      outFileName
+                      hashedOutFileName
                     )});`,
                     "path.fallback = fallback;",
                     `module.exports = path;`,
@@ -188,7 +214,7 @@ function loader(this: any, buffer: Buffer) {
                 callback(
                   null,
                   `module.exports = __webpack_public_path__ + ${JSON.stringify(
-                    outFileName
+                    hashedOutFileName
                   )};`
                 );
               }
