@@ -1,6 +1,6 @@
 {
   "name": "as-loader",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "AssemblyScript loader for webpack",
   "main": "loader/index.js",
   "types": "./index.d.ts",
