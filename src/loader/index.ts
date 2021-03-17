@@ -39,14 +39,29 @@ function loader(this: any, buffer: Buffer) {
     name = "[name].[contenthash].wasm",
     raw = false,
     fallback = false,
-    ...ascOptions
+    ...userAscOptions
   } = options as LoaderOptions & CompilerOptions;
+
+  const ascOptions = {
+    // default options
+    // when user imports wasm with webassembly type, it's not possible to pass env
+    runtime: module.type?.startsWith("webassembly") ? "stub" : "incremental",
+    exportRuntime: !module.type?.startsWith("webassembly"),
+    // user options
+    ...userAscOptions,
+  };
 
   if (!SUPPORTED_EXTENSIONS.some((extension) => name.endsWith(extension))) {
     throw new Error(
       `Unsupported extension in name: "${name}" option in as-loader. ` +
         `Supported extensions are ${SUPPORTED_EXTENSIONS.join(", ")}`
     );
+  }
+
+  if (name.endsWith(".js")) {
+    // overwrite options for js
+    ascOptions.runtime = "stub";
+    ascOptions.exportRuntime = false;
   }
 
   const shouldGenerateSourceMap = this.sourceMap;

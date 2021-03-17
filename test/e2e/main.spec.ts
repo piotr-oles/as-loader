@@ -237,6 +237,31 @@ describe("as-loader", () => {
         expect(mainResults).toEqual("15\n");
       }
     );
+
+    it.each([[{ webpack: WEBPACK_4 }], [{ webpack: WEBPACK_5 }]])(
+      "compiles example with context data types for %p",
+      async (dependencies) => {
+        await sandbox.load(path.resolve(__dirname, "fixtures/main"));
+        await sandbox.install("yarn", dependencies);
+
+        await sandbox.patch(
+          "webpack.config.js",
+          '  entry: "./src/correct.ts",',
+          '  entry: "./src/complex.ts",'
+        );
+
+        const webpackResults = await sandbox.exec("yarn webpack");
+
+        expect(webpackResults).toContain("complex.wasm");
+        expect(webpackResults).toContain("complex.wasm.map");
+        expect(webpackResults).toContain("main.js");
+
+        const mainResults = await sandbox.exec("node ./dist/main.js");
+        expect(mainResults).toEqual(
+          "rgb(100, 50, 20),rgb(105, 51, 19),rgb(110, 52, 18),rgb(115, 53, 17),rgb(120, 54, 16),rgb(125, 55, 15),rgb(130, 56, 14),rgb(135, 57, 13),rgb(140, 58, 12),rgb(145, 59, 11)\n"
+        );
+      }
+    );
   });
 
   describe("watch compilation", () => {
@@ -347,23 +372,21 @@ describe("as-loader", () => {
           "          shrinkLevel: 1,",
           "          coverage: true,",
           "          noAssert: true,",
-          '          runtime: "stub",',
+          '          runtime: "minimal",',
           "          debug: true,",
           '          trapMode: "allow",',
           "          noValidate: true,",
           "          importMemory: false,",
           "          noExportMemory: true,",
-          "          initialMemory: 1000,",
-          "          maximumMemory: 2000,",
-          "          sharedMemory: true,",
+          "          initialMemory: 5000,",
+          "          maximumMemory: 10000,",
+          "          sharedMemory: false,",
           "          importTable: false,",
           "          exportTable: false,",
           "          explicitStart: false,",
           '          enable: ["simd", "threads"],',
           '          disable: ["mutable-globals"],',
           "          lowMemoryLimit: false,",
-          "          memoryBase: 1024,",
-          "          tableBase: 0,",
         ].join("\n")
       );
 
