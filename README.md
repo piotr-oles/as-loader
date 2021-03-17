@@ -67,7 +67,7 @@ The loader provides correct types, checks for WebAssembly support, and uses fall
 
 ```typescript
 import * as myModule from "./assembly/myModule";
-import { instantiate } from "as-loader/runtime/web";
+import { instantiate } from "as-loader/runtime";
 
 async function loadAndRun() {
   const { exports } = await instantiate(myModule);
