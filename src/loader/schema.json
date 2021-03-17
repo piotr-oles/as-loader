@@ -37,8 +37,12 @@
     },
     "runtime": {
       "type": "string",
-      "enum": ["full", "half", "stub", "none"],
+      "enum": ["incremental", "minimal", "stub"],
       "description": "Specifies the runtime variant to include in the program."
+    },
+    "exportRuntime": {
+      "type": "boolean",
+      "description": "Exports the runtime helpers (__new, __collect etc.)."
     },
     "debug": {
       "type": "boolean",
@@ -94,7 +98,8 @@
           "bulk-memory",
           "simd",
           "threads",
-          "reference-types"
+          "reference-types",
+          "gc"
         ]
       },
       "description": "Enables WebAssembly features being disabled by default."

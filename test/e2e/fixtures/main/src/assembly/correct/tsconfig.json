@@ -2,6 +2,6 @@
   "extends": "../../tsconfig.json",
   "include": [
     "./simple.ts",
-    "../../../../node_modules/assemblyscript/std/assembly/index.d.ts"
+    "../../../node_modules/assemblyscript/std/assembly/index.d.ts"
   ]
 }

@@ -2,14 +2,13 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
+    "moduleResolution": "node",
     "lib": ["DOM", "ES6"],
-    "strict": true,
-    "skipLibCheck": true
+    "strict": true
   },
   "include": [
     "./async.ts",
     "./correct.ts",
     "./broken.ts"
-  ],
-  "exclude": ["node_modules"]
+  ]
 }
