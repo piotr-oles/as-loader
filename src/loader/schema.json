@@ -15,6 +15,10 @@
       "type": "boolean",
       "description": "Use fallback JavaScript file if WebAssembly is not supported."
     },
+    "bind": {
+      "type": "boolean",
+      "description": "Add `as-bind` library files to the compilation (required if you want to use `as-loader/runtime/bind`)."
+    },
     "optimizeLevel": {
       "type": "number",
       "minimum": 0,

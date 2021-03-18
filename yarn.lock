@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@assemblyscript/loader@~0.18.0":
+"@assemblyscript/loader@~0.18.0", "@assemblyscript/loader@~0.18.7":
   version "0.18.15"
   resolved "https://registry.yarnpkg.com/@assemblyscript/loader/-/loader-0.18.15.tgz#9c3c6c15ad51a522b619b6faf34e3d0c7ba894ed"
   integrity sha512-kUWC6tBJQiI38vFT6L9M2zlzJ3/Wgh8JZEIMekgkhXjLkDTMWcmOZX085RsOx5c9BdwrqMwaj/iMIpCbid214g==
@@ -1318,6 +1318,14 @@ array-unique@^0.3.2:
   resolved "https://registry.yarnpkg.com/array-unique/-/array-unique-0.3.2.tgz#a894b75d4bc4f6cd679ef3244a9fd8f46ae2d428"
   integrity sha1-qJS3XUvE9s1nnvMkSp/Y9Gri1Cg=
 
+as-bind@^0.6.0:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/as-bind/-/as-bind-0.6.1.tgz#07e753461028a9a0a568ffc27be36ecf8d855217"
+  integrity sha512-90s9PreIi9PQW0gFrKQr5d97f6a3rpqdrJTEgB5jdDPgl0SoEfmz8nq4oSUdmdB7Zv3wp3KPsvpJDfCygduHyQ==
+  dependencies:
+    "@assemblyscript/loader" "~0.18.7"
+    assemblyscript "~0.18.7"
+
 asn1.js@^5.2.0:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/asn1.js/-/asn1.js-5.4.1.tgz#11a980b84ebb91781ce35b0fdc2ee294e3783f07"
@@ -1335,7 +1343,7 @@ asn1@~0.2.3:
   dependencies:
     safer-buffer "~2.1.0"
 
-assemblyscript@^0.18.0:
+assemblyscript@^0.18.0, assemblyscript@~0.18.7:
   version "0.18.15"
   resolved "https://registry.yarnpkg.com/assemblyscript/-/assemblyscript-0.18.15.tgz#b66a4d96c7de14e311303fb7c8ccf14b9d689e8f"
   integrity sha512-s1N1qwdBhen2SLQApYCtRIPWm1Am3oAbW58GCEKbeN6ZbQRh7nq0pv4RDqKw6CgK7dySn/F2S1D6p0scyRbQRw==

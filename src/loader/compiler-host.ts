@@ -13,7 +13,7 @@ function createCompilerHost(context: any): CompilerHost {
   const diagnostics: DiagnosticMessage[] = [];
 
   function readFile(fileName: string, baseDir: string) {
-    const filePath = path.resolve(baseDir, path.basename(fileName));
+    const filePath = baseDir ? path.resolve(baseDir, fileName) : fileName;
 
     if (memVolume[filePath]) {
       return memVolume[filePath];
@@ -30,9 +30,7 @@ function createCompilerHost(context: any): CompilerHost {
   }
 
   function writeFile(fileName: string, contents: Uint8Array, baseDir: string) {
-    const filePath = baseDir
-      ? path.resolve(baseDir, path.basename(fileName))
-      : fileName;
+    const filePath = baseDir ? path.resolve(baseDir, fileName) : fileName;
 
     memVolume[filePath] = Buffer.isBuffer(contents)
       ? contents

@@ -1,52 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ResultObject } from "@assemblyscript/loader";
-
-interface AsLoaderModule<TModule> extends String {
-  fallback?(): Promise<TModule>;
-}
+import { Pointer } from "./pointer";
 
 // TypeId<> would have to be implemented on the @assemblyscript/loader side to use nominal type
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TypeId<T = unknown> = number; // & { __brand: "type-id"; __type: T };
-type Pointer<T = unknown> = number & { __brand: "pointer"; __type: T };
-type NullablePointer<T> = T extends undefined | null | void ? null : Pointer<T>;
 
-type Pointerify<T> = T extends number | boolean | bigint
-  ? T
-  : T extends new (...args: any) => any
-  ? PointerifyInstance<T>
-  : T extends (...args: any) => any
-  ? PointerifyFunction<T>
-  : T extends any[]
-  ? Pointer<PointerifyArray<T>>
-  : T extends Record<string | symbol | number, any>
-  ? Pointer<PointerifyObject<T>>
-  : NullablePointer<T>;
-type PointerifyArray<T extends any[]> = {
-  [K in keyof T]: Pointerify<T[K]>;
-};
-type PointerifyFunction<T extends (...args: any) => any> = T extends (
-  ...args: infer A
-) => infer R
-  ? (...args: PointerifyArray<A>) => Pointerify<R>
-  : never;
-type PointerifyObject<T extends Record<any, any>> = T extends Record<
-  string | symbol | number,
-  any
->
-  ? {
-      [K in keyof T]: Pointerify<T[K]>;
-    }
-  : never;
-type PointerifyInstance<T extends new (...args: any) => any> = T extends new (
-  ...args: any
-) => infer R
-  ? T & {
-      wrap(ptr: Pointer<PointerifyObject<R>>): PointerifyObject<R>;
-    }
-  : never;
-
-interface AsLoaderRuntime {
+export interface AsLoaderRuntime {
   memory?: WebAssembly.Memory;
   table?: WebAssembly.Table;
 
@@ -126,30 +84,3 @@ interface AsLoaderRuntime {
   /** Performs a full garbage collection cycle. */
   __collect(incremental?: boolean): void;
 }
-
-interface WasmModuleInstance<TModule> extends ResultObject {
-  type: "wasm";
-  exports: AsLoaderRuntime & PointerifyObject<TModule>;
-}
-interface JsModuleInstance<TModule> {
-  type: "js";
-  exports: TModule;
-}
-type ModuleInstance<TModule> =
-  | WasmModuleInstance<TModule>
-  | JsModuleInstance<TModule>;
-
-export {
-  AsLoaderModule,
-  AsLoaderRuntime,
-  WasmModuleInstance,
-  JsModuleInstance,
-  ModuleInstance,
-  Pointer,
-  NullablePointer,
-  Pointerify,
-  PointerifyArray,
-  PointerifyFunction,
-  PointerifyObject,
-  PointerifyInstance,
-};

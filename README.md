@@ -97,6 +97,78 @@ loadAndRun();
 
 ```
 
+### API
+> For more details, check [src/runtime](src/runtime) directory
+
+#### `as-loader/runtime`
+This runtime loader uses `@assemblyscript/loader` under the hood.
+```typescript
+export interface WasmModuleInstance<TModule> {
+  type: "wasm";
+  exports: AsLoaderRuntime & PointerCastObject<TModule>;
+  module: WebAssembly.Module;
+  instance: WebAssembly.Instance;
+}
+
+export interface JsModuleInstance<TModule> {
+  type: "js";
+  exports: TModule;
+}
+
+export type ModuleInstance<TModule> =
+  | WasmModuleInstance<TModule>
+  | JsModuleInstance<TModule>;
+
+export function instantiate<TModule>(
+  module: TModule,
+  load: (url: string) => Promise<unknown>,
+  imports?: object,
+  fallback?: boolean,
+  supports?: () => boolean
+): Promise<ModuleInstance<TModule>>
+```
+
+#### `as-loader/runtime/bind`
+This runtime loader uses `as-bind` under the hood, so you don't have to resolve pointers for
+types like `string`, `number[]`, `Int8Array`, etc. You still have to resolve pointers to objects.
+Requires `bind: true` option in the webpack loader configuration.
+> Keep in mind that currently [it's recommended to manually set `Function.returnType`](https://github.com/torch2424/as-bind#production)
+```typescript
+export interface BoundWasmModuleInstance<TModule, TImports> {
+  type: "wasm-bound";
+  exports: AsLoaderRuntime & BoundExports<TModule>;
+  unboundExports: AsLoaderRuntime & PointerCastObject<TModule>;
+  importObject: TImports;
+  module: WebAssembly.Module;
+  instance: WebAssembly.Instance;
+  enableExportFunctionTypeCaching(): void;
+  disableExportFunctionTypeCaching(): void;
+  enableExportFunctionUnsafeReturnValue(): void;
+  disableExportFunctionUnsafeReturnValue(): void;
+  enableImportFunctionTypeCaching(): void;
+  disableImportFunctionTypeCaching(): void;
+}
+
+export interface JsModuleInstance<TModule> {
+  type: "js";
+  exports: TModule;
+}
+
+type BoundModuleInstance<TModule, TImports> =
+  | BoundWasmModuleInstance<TModule, TImports>
+  | JsModuleInstance<TModule>;
+
+export function instantiate<TModule, TImports>(
+  module: TModule,
+  load: (url: string) => Promise<unknown>,
+  imports?: TImports,
+  fallback?: boolean,
+  supports?: () => boolean
+): Promise<BoundModuleInstance<TModule, TImports>>
+
+export const RETURN_TYPES: AsBindReturnTypes;
+```
+
 </details>
 
 ## Binding
@@ -112,34 +184,8 @@ There are 2 aspects that you have to consider when interacting with WebAssembly 
 The `as-loader/runtime` uses `@assemblyscript/loader` under the hood -
 [see the docs](https://www.assemblyscript.org/loader.html) for more information.
 
-### API
-> For more detailes, check [src/runtime](src/runtime) directory
-```typescript
-interface WasmModuleInstance<TModule> extends ResultObject {
-  type: "wasm";
-  exports: AsLoaderRuntime & PointerifyObject<TModule>;
-}
-
-interface JsModuleInstance<TModule> {
-  type: "js";
-  exports: TModule;
-}
-
-type ModuleInstance<TModule> =
-  | WasmModuleInstance<TModule>
-  | JsModuleInstance<TModule>;
-
-function instantiate<TModule>(
-  module: TModule,
-  load: (url: string) => Promise<unknown>,
-  imports?: object,
-  fallback?: boolean,
-  supports?: () => boolean
-): Promise<ModuleInstance<TModule>>
-```
-
 <details>
-<summary>Binding code example:</summary>
+<summary>`as-loader/runtime` binding code example:</summary>
 
 ```typescript
 // ./src/assembly/sayHello.ts
@@ -174,6 +220,36 @@ export async function loadModule(): Promise<typeof sayHelloModule> {
 ```
 
 </details>
+
+You can consider using `bind: true` option and `as-loader/runtime/bind` runtime loader which uses
+[`as-bind`](https://github.com/torch2424/as-bind) under the hood - this makes passing types like `string` and `array` 
+much easier.
+
+
+<details>
+<summary>`as-loader/runtime/bind` binding code example:</summary>
+
+```typescript
+// ./src/assembly/sayHello.ts
+export function sayHello(firstName: string, lastName: string): string {
+  return `Hello ${firstName} ${lastName}!`;
+}
+
+// ./src/sayHello.ts
+import * as sayHelloModule from "./assembly/sayHello";
+import { instantiate, RETURN_TYPES } from "as-loader/runtime/bind";
+
+export async function loadModule(): Promise<typeof sayHelloModule> {
+  // this example doesn't use fallback so TypeScript knows that it's only WASM module
+  const { exports } = await instantiate(sayHelloModule, fetch, undefined, false);
+  const { sayHello } = exports;
+  sayHello.returnType = RETURN_TYPES.STRING;
+
+  return { sayHello };
+}
+```
+
+</details>
    
 ## Options
 #### Loader Options
@@ -183,6 +259,7 @@ export async function loadModule(): Promise<typeof sayHelloModule> {
 | `name`     | string  | Output asset name template, `[name].[contenthash].wasm` by default. |
 | `raw`      | boolean | If true, returns binary instead of emitting file. Use for chaining with other loaders. |
 | `fallback` | boolean | If true, creates additional JavaScript file which can be used if WebAssembly is not supported. |
+| `bind`     | boolean | If true, adds `as-bind` library files to the compilation (required if you want to use `as-loader/runtime/bind`). |
 
 #### Compiler Options
 

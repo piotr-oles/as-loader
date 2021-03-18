@@ -39,6 +39,7 @@ function loader(this: any, buffer: Buffer) {
     name = "[name].[contenthash].wasm",
     raw = false,
     fallback = false,
+    bind = false,
     ...userAscOptions
   } = options as LoaderOptions & CompilerOptions;
 
@@ -56,6 +57,11 @@ function loader(this: any, buffer: Buffer) {
       `Unsupported extension in name: "${name}" option in as-loader. ` +
         `Supported extensions are ${SUPPORTED_EXTENSIONS.join(", ")}`
     );
+  }
+
+  if (bind && name.endsWith(".wasm")) {
+    // overwrite options for bind
+    ascOptions.exportRuntime = true;
   }
 
   if (name.endsWith(".js")) {
@@ -95,6 +101,10 @@ function loader(this: any, buffer: Buffer) {
   ];
   if (shouldGenerateSourceMap) {
     args.push("--sourceMap", "--debug");
+  }
+  if (bind && name.endsWith(".wasm")) {
+    // add required by as-bind file to compilation
+    args.unshift(require.resolve("as-bind/lib/assembly/as-bind.ts"));
   }
 
   asc.ready
