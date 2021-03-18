@@ -3,7 +3,6 @@
   "version": "0.3.0",
   "description": "AssemblyScript loader for webpack",
   "main": "loader/index.js",
-  "types": "./index.d.ts",
   "repository": "git@github.com:piotr-oles/as-loader.git",
   "author": "Piotr Oleś <piotrek.oles@gmail.com>",
   "license": "MIT",
@@ -22,17 +21,17 @@
   },
   "files": [
     "loader/*",
-    "runtime/*",
-    "index.d.ts"
+    "runtime/*"
   ],
   "peerDependencies": {
     "assemblyscript": "~0.18.0",
     "webpack": "^4.0.0 || ^5.0.0"
   },
   "dependencies": {
+    "@assemblyscript/loader": "~0.18.0",
+    "as-bind": "^0.6.0",
     "loader-utils": "^2.0.0",
-    "schema-utils": "^3.0.0",
-    "@assemblyscript/loader": "~0.18.0"
+    "schema-utils": "^3.0.0"
   },
   "devDependencies": {
     "@types/loader-utils": "^2.0.1",

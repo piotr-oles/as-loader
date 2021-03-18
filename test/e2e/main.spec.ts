@@ -262,6 +262,34 @@ describe("as-loader", () => {
         );
       }
     );
+
+    it.each([[{ webpack: WEBPACK_4 }], [{ webpack: WEBPACK_5 }]])(
+      "compiles example with bind for %p",
+      async (dependencies) => {
+        await sandbox.load(path.resolve(__dirname, "fixtures/main"));
+        await sandbox.install("yarn", dependencies);
+
+        await sandbox.patch(
+          "webpack.config.js",
+          '  entry: "./src/correct.ts",',
+          '  entry: "./src/bind.ts",'
+        );
+        await sandbox.patch(
+          "webpack.config.js",
+          '          name: "[name].wasm",',
+          ['          name: "[name].wasm",', "          bind: true,"].join("\n")
+        );
+
+        const webpackResults = await sandbox.exec("yarn webpack");
+
+        expect(webpackResults).toContain("bind.wasm");
+        expect(webpackResults).toContain("bind.wasm.map");
+        expect(webpackResults).toContain("main.js");
+
+        const mainResults = await sandbox.exec("node ./dist/main.js");
+        expect(mainResults).toEqual("Hello world!\n");
+      }
+    );
   });
 
   describe("watch compilation", () => {

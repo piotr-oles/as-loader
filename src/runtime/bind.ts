@@ -1,43 +1,51 @@
-import {
-  Imports,
-  instantiate as asLoaderInstantiate,
-} from "@assemblyscript/loader";
+import type { Imports } from "@assemblyscript/loader";
+import { AsBind } from "as-bind";
 import type {
-  WasmModuleInstance,
+  BoundWasmModuleInstance,
   JsModuleInstance,
-  ModuleInstance,
+  BoundModuleInstance,
   AsLoaderModule,
 } from "./types";
 import { context } from "./context";
+import { AsBindReturnTypes } from "./types/ref-types";
 
-async function instantiate<TModule>(
+async function instantiate<
+  TModule,
+  TImports extends Imports | undefined = Imports | undefined
+>(
   module: TModule | string,
   load: (url: string) => Promise<unknown>,
-  imports: Imports | undefined,
+  imports: TImports,
   fallback: false,
   supports?: () => boolean
-): Promise<WasmModuleInstance<TModule>>;
-async function instantiate<TModule>(
+): Promise<BoundWasmModuleInstance<TModule, TImports>>;
+async function instantiate<
+  TModule,
+  TImports extends Imports | undefined = Imports | undefined
+>(
   module: TModule | string,
   load: (url: string) => Promise<unknown>,
-  imports?: Imports,
+  imports?: TImports,
   fallback?: true,
   supports?: () => boolean
-): Promise<ModuleInstance<TModule>>;
-async function instantiate<TModule>(
+): Promise<BoundModuleInstance<TModule, TImports>>;
+async function instantiate<
+  TModule,
+  TImports extends Imports | undefined = Imports | undefined
+>(
   module: TModule | string,
   load: (url: string) => Promise<unknown>,
-  imports: Imports = {},
+  imports: TImports = {} as TImports,
   fallback = true,
   supports = () => Boolean(context && context.WebAssembly)
-): Promise<ModuleInstance<TModule>> {
+): Promise<BoundModuleInstance<TModule, TImports>> {
   const moduleURL: AsLoaderModule<TModule> = module as never;
 
   if (supports()) {
     // WebAssembly is supported
     return {
-      type: "wasm",
-      ...(await asLoaderInstantiate<never>(load(moduleURL as string), imports)),
+      type: "wasm-bound",
+      ...(await AsBind.instantiate(load(moduleURL as string), imports)),
     };
   } else if (fallback && moduleURL.fallback) {
     return {
@@ -51,13 +59,17 @@ async function instantiate<TModule>(
   );
 }
 
+const RETURN_TYPES: AsBindReturnTypes = AsBind.RETURN_TYPES;
+
 export {
   instantiate,
+  RETURN_TYPES,
   Imports,
-  WasmModuleInstance,
+  BoundWasmModuleInstance,
   JsModuleInstance,
-  ModuleInstance,
+  BoundModuleInstance,
   AsLoaderModule,
 };
 export * from "./types/pointer";
+export * from "./types/bound";
 export * from "./types/runtime";
