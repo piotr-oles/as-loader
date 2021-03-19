@@ -5,7 +5,6 @@
 
 <h1>as-loader</h1>
 <p>AssemblyScript loader for webpack</p>
-<p>⚠️ In development ⚠️</p>
 
 [![npm version](https://img.shields.io/npm/v/as-loader.svg)](https://www.npmjs.com/package/as-loader)
 [![build status](https://github.com/piotr-oles/as-loader/workflows/CI/CD/badge.svg?branch=main&event=push)](https://github.com/piotr-oles/as-loader/actions?query=branch%3Amain+event%3Apush)
@@ -55,15 +54,16 @@ module.exports = {
 
 ## Usage
 
-By default, the loader emits `.wasm` file (+ `.wasm.map` if source maps are enabled) and 
+By default, the loader emits a `.wasm` file (+ `.wasm.map` if source maps are enabled) and 
 creates CommonJS module that exports URL to the emitted `.wasm` file.
 
 If you enable `fallback` option, the loader will emit additional `.js` file (+ `.js.map` if source maps are enabled)
 and will expose async `fallback()` function which dynamically imports fallback module.
 
-To simplify loading logic, you can use `as-loader/runtime` loader which uses
-`@assemblyscript/loader` under the hood. 
-The loader provides correct types, checks for WebAssembly support, and uses fallback if available.
+To simplify loading logic, you can use `as-loader/runtime` loader which uses 
+[@assemblyscript/loader](https://github.com/AssemblyScript/assemblyscript/tree/master/lib/loader), or
+`as-loader/runtime/bind` loader which uses [as-bind](https://github.com/torch2424/as-bind).
+These loaders provide correct types, checks for WebAssembly support, and uses fallback if available.
 
 ```typescript
 import * as myModule from "./assembly/myModule";
@@ -97,11 +97,13 @@ loadAndRun();
 
 ```
 
+</details>
+
 ### API
 > For more details, check [src/runtime](src/runtime) directory
 
 #### `as-loader/runtime`
-This runtime loader uses `@assemblyscript/loader` under the hood.
+This runtime loader uses [@assemblyscript/loader](https://github.com/AssemblyScript/assemblyscript/tree/master/lib/loader) under the hood.
 ```typescript
 export interface WasmModuleInstance<TModule> {
   type: "wasm";
@@ -123,15 +125,51 @@ export function instantiate<TModule>(
   module: TModule,
   load: (url: string) => Promise<unknown>,
   imports?: object,
-  fallback?: boolean,
+  fallback: boolean = false,
   supports?: () => boolean
 ): Promise<ModuleInstance<TModule>>
 ```
 
+<details>
+<summary><code>as-loader/runtime</code> binding code example:</summary>
+
+```typescript
+// ./src/assembly/sayHello.ts
+export function sayHello(firstName: string, lastName: string): string {
+  return `Hello ${firstName} ${lastName}!`;
+}
+
+// ./src/sayHello.ts
+import * as sayHelloModule from "./assembly/sayHello";
+import { instantiate } from "as-loader/runtime";
+
+export async function loadModule(): Promise<typeof sayHelloModule> {
+  const { exports } = await instantiate(sayHelloModule, fetch);
+  const { __pin, __unpin, __newString, __getString } = exports;
+
+  function sayHello(firstName: string, lastName: string): string {
+    const firstNamePtr = __pin(__newString(firstName));
+    const lastNamePtr = __pin(__newString(lastName));
+    const result = __getString(
+      exports.sayHello(firstNamePtr, lastNamePtr)
+    );
+
+    __unpin(firstNamePtr);
+    __unpin(lastNamePtr);
+
+    return result;
+  }
+
+  return { sayHello };
+}
+```
+
+</details>
+
+
 #### `as-loader/runtime/bind`
-This runtime loader uses `as-bind` under the hood, so you don't have to resolve pointers for
-types like `string`, `number[]`, `Int8Array`, etc. You still have to resolve pointers to objects.
-Requires `bind: true` option in the webpack loader configuration.
+This runtime loader uses [as-bind](https://github.com/torch2424/as-bind) under the hood. 
+Requires `bind` option enabled in the webpack loader configuration.
 > Keep in mind that currently [it's recommended to manually set `Function.returnType`](https://github.com/torch2424/as-bind#production)
 ```typescript
 export interface BoundWasmModuleInstance<TModule, TImports> {
@@ -162,72 +200,15 @@ export function instantiate<TModule, TImports>(
   module: TModule,
   load: (url: string) => Promise<unknown>,
   imports?: TImports,
-  fallback?: boolean,
+  fallback: boolean = false,
   supports?: () => boolean
 ): Promise<BoundModuleInstance<TModule, TImports>>
 
 export const RETURN_TYPES: AsBindReturnTypes;
 ```
 
-</details>
-
-## Binding
-There are 2 aspects that you have to consider when interacting with WebAssembly module:
-  1. WebAssembly doesn't support function arguments and returns others than `number` and `boolean` yet.
-     Because of that, you have to [manually translate between WebAssembly pointers and JavaScript objects](https://www.assemblyscript.org/loader.html#usage).
-     The alternative solution is to use [`as-bind`](https://github.com/torch2424/as-bind#readme) library which 
-     does this automatically for `string` and `array` types (doesn't support objects yet).
-  2. WebAssembly doesn't provide GC yet ([proposal](https://github.com/WebAssembly/gc)) - to manage memory, 
-     AssemblyScript offers very lightweight GC implementation. If you use it (see `runtime` option - it's `"incremental"` by default), 
-     you have to manually `__pin` and `__unpin` pointers to instruct GC if given data can be collected or not.
-
-The `as-loader/runtime` uses `@assemblyscript/loader` under the hood -
-[see the docs](https://www.assemblyscript.org/loader.html) for more information.
-
 <details>
-<summary>`as-loader/runtime` binding code example:</summary>
-
-```typescript
-// ./src/assembly/sayHello.ts
-export function sayHello(firstName: string, lastName: string): string {
-  return `Hello ${firstName} ${lastName}!`;
-}
-
-// ./src/sayHello.ts
-import * as sayHelloModule from "./assembly/sayHello";
-import { instantiate } from "as-loader/runtime";
-
-export async function loadModule(): Promise<typeof sayHelloModule> {
-  // this example doesn't use fallback so TypeScript knows that it's only WASM module
-  const { exports } = await instantiate(sayHelloModule, fetch, undefined, false);
-  const { __pin, __unpin, __newString, __getString } = exports;
-
-  function sayHello(firstName: string, lastName: string): string {
-    const firstNamePtr = __pin(__newString(firstName));
-    const lastNamePtr = __pin(__newString(lastName));
-    const result = __getString(
-      exports.sayHello(firstNamePtr, lastNamePtr)
-    );
-
-    __unpin(firstNamePtr);
-    __unpin(lastNamePtr);
-
-    return result;
-  }
-
-  return { sayHello };
-}
-```
-
-</details>
-
-You can consider using `bind: true` option and `as-loader/runtime/bind` runtime loader which uses
-[`as-bind`](https://github.com/torch2424/as-bind) under the hood - this makes passing types like `string` and `array` 
-much easier.
-
-
-<details>
-<summary>`as-loader/runtime/bind` binding code example:</summary>
+<summary><code>as-loader/runtime/bind</code> binding code example:</summary>
 
 ```typescript
 // ./src/assembly/sayHello.ts
@@ -240,12 +221,97 @@ import * as sayHelloModule from "./assembly/sayHello";
 import { instantiate, RETURN_TYPES } from "as-loader/runtime/bind";
 
 export async function loadModule(): Promise<typeof sayHelloModule> {
-  // this example doesn't use fallback so TypeScript knows that it's only WASM module
-  const { exports } = await instantiate(sayHelloModule, fetch, undefined, false);
+  const { exports } = await instantiate(sayHelloModule, fetch);
   const { sayHello } = exports;
   sayHello.returnType = RETURN_TYPES.STRING;
 
   return { sayHello };
+}
+```
+
+</details>
+
+## Binding
+There are 2 aspects that you have to consider when interacting with a WebAssembly module:
+  1. WebAssembly doesn't support function arguments and returns others than `number | boolean | bigint` yet.
+     Because of that, you have to [manually translate between WebAssembly pointers and JavaScript objects](https://www.assemblyscript.org/loader.html#usage).
+     
+     The alternative is to enable the `bind` option and use `as-loader/runtime/bind` loader which uses an [as-bind](https://github.com/torch2424/as-bind) library. 
+     This simplifies passing types like strings and arrays. 
+       
+  2. WebAssembly doesn't provide Garbage Collector yet ([proposal](https://github.com/WebAssembly/gc)) - to manage memory, 
+     AssemblyScript offers very lightweight GC implementation. If you use it (see `runtime` option), 
+     you have to [manually `__pin` and `__unpin` pointers](https://www.assemblyscript.org/garbage-collection.html#incremental-runtime)
+     to instruct GC if given data can be collected or not.
+   
+## Fallback
+If you need to support [older browsers](https://caniuse.com/wasm) like *Internet Explorer* or *Edge* < 16, 
+you can use the `fallback` option. A fallback module is different from WebAssembly one because you don't have to bind it.
+
+
+<details>
+<summary>Fallback example:</summary>
+
+```js
+// webpack.config.js
+module.exports = {
+  entry: "src/index.ts",
+  resolve: {
+    extensions: [".ts", ".js"],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        include: path.resolve(__dirname, "src/assembly"),
+        loader: "as-loader",
+        options: {
+          fallback: true
+        }
+      },
+      {
+        test: /\.ts$/,
+        exclude: path.resolve(__dirname, "src/assembly"),
+        loader: "ts-loader",
+      },
+    ],
+  },
+};
+```
+```typescript
+// ./src/assembly/sayHello.ts
+export function sayHello(firstName: string, lastName: string): string {
+  return `Hello ${firstName} ${lastName}!`;
+}
+
+// ./src/sayHello.ts
+import * as sayHelloModule from "./assembly/sayHello";
+import { instantiate } from "as-loader/runtime";
+
+export async function loadModule(): Promise<typeof sayHelloModule> {
+  // set fallback option to true (opt-in)
+  const module = await instantiate(sayHelloModule, fetch, undefined, true);
+
+  if (module.type === 'wasm') {
+    const { __pin, __unpin, __newString, __getString } = exports;
+  
+    function sayHello(firstName: string, lastName: string): string {
+      const firstNamePtr = __pin(__newString(firstName));
+      const lastNamePtr = __pin(__newString(lastName));
+      const result = __getString(
+        exports.sayHello(firstNamePtr, lastNamePtr)
+      );
+  
+      __unpin(firstNamePtr);
+      __unpin(lastNamePtr);
+  
+      return result;
+    }
+  
+    return { sayHello };
+  } else {
+    return { sayHello: module.exports.sayHello }
+  }
 }
 ```
 
@@ -257,9 +323,9 @@ export async function loadModule(): Promise<typeof sayHelloModule> {
 | Name       | Type    | Description |
 |------------|---------| ----------- |
 | `name`     | string  | Output asset name template, `[name].[contenthash].wasm` by default. |
-| `raw`      | boolean | If true, returns binary instead of emitting file. Use for chaining with other loaders. |
+| `bind`     | boolean | If true, adds [as-bind](https://github.com/torch2424/as-bind) library files to the compilation (required if you want to use `as-loader/runtime/bind`). |
 | `fallback` | boolean | If true, creates additional JavaScript file which can be used if WebAssembly is not supported. |
-| `bind`     | boolean | If true, adds `as-bind` library files to the compilation (required if you want to use `as-loader/runtime/bind`). |
+| `raw`      | boolean | If true, returns binary instead of emitting file. Use for chaining with other loaders. |
 
 #### Compiler Options
 
@@ -279,7 +345,7 @@ Options passed to the [AssemblyScript compiler](https://www.assemblyscript.org/c
 | `sharedMemory`   | boolean  | Declare memory as shared. Requires maximumMemory. |
 | `importTable`    | boolean  | Imports the function table provided as 'env.table'. |
 | `exportTable`    | boolean  | Exports the function table as 'table'. |
-| `runtime`        | string   | Specifies the runtime variant to include in the program. Available runtimes are: "incremental" (default), "minimal", "stub" |
+| `runtime`        | string   | Specifies the runtime variant to include in the program. Available runtime are: "incremental" (default), "minimal", "stub" |
 | `exportRuntime`  | boolean  | Exports the runtime helpers (__new, __collect etc.). Enabled by default. |
 | `explicitStart`  | boolean  | Exports an explicit '_start' function to call. |
 | `enable`         | string[] | Enables WebAssembly features being disabled by default. Available features are: "sign-extension", "bulk-memory", "simd", "threads", "reference-types", "gc" |
