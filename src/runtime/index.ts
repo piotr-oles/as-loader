@@ -13,22 +13,22 @@ import { context } from "./context";
 async function instantiate<TModule>(
   module: TModule | string,
   load: (url: string) => Promise<unknown>,
-  imports: Imports | undefined,
-  fallback: false,
+  imports?: Imports,
+  fallback?: false,
   supports?: () => boolean
 ): Promise<WasmModuleInstance<TModule>>;
 async function instantiate<TModule>(
   module: TModule | string,
   load: (url: string) => Promise<unknown>,
-  imports?: Imports,
-  fallback?: true,
+  imports: Imports | undefined,
+  fallback: true,
   supports?: () => boolean
 ): Promise<ModuleInstance<TModule>>;
 async function instantiate<TModule>(
   module: TModule | string,
   load: (url: string) => Promise<unknown>,
   imports: Imports = {},
-  fallback = true,
+  fallback = false,
   supports = () => Boolean(context && context.WebAssembly)
 ): Promise<ModuleInstance<TModule>> {
   const moduleURL: AsLoaderModule<TModule> = module as never;

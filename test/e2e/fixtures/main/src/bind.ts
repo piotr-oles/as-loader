@@ -6,9 +6,7 @@ import * as assembly from "./assembly/correct/bind";
 async function loadAndRun() {
   const module = await instantiate(
     assembly,
-    fs.promises.readFile,
-    undefined,
-    false
+    fs.promises.readFile
   );
 
   const { hello } = module.exports;
