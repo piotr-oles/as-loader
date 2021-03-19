@@ -49,6 +49,9 @@ function loader(this: any, buffer: Buffer) {
     runtime: module.type?.startsWith("webassembly") ? "stub" : "incremental",
     exportRuntime: !module.type?.startsWith("webassembly"),
     debug: this.mode === "development",
+    optimizeLevel: 3,
+    shrinkLevel: 1,
+    noAssert: this.mode === "production",
     // user options
     ...userAscOptions,
   };
