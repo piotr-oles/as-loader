@@ -5,7 +5,7 @@ import { getOptions, interpolateName, OptionObject } from "loader-utils";
 import { validate } from "schema-utils";
 import { Schema } from "schema-utils/declarations/validate";
 import { createCompilerHost } from "./compiler-host";
-import { mapAscOptionsToArgs } from "./options";
+import { mapAscOptionsToArgs, Options } from "./options";
 import { AssemblyScriptError } from "./error";
 import schema from "./schema.json";
 import { addErrorToModule, addWarningToModule } from "./webpack";
@@ -43,11 +43,15 @@ function loader(this: any, buffer: Buffer) {
     ...userAscOptions
   } = options as LoaderOptions & CompilerOptions;
 
-  const ascOptions = {
+  const ascOptions: Options = {
     // default options
     // when user imports wasm with webassembly type, it's not possible to pass env
     runtime: module.type?.startsWith("webassembly") ? "stub" : "incremental",
     exportRuntime: !module.type?.startsWith("webassembly"),
+    debug: this.mode === "development",
+    optimizeLevel: 3,
+    shrinkLevel: 1,
+    noAssert: this.mode === "production",
     // user options
     ...userAscOptions,
   };
@@ -91,6 +95,10 @@ function loader(this: any, buffer: Buffer) {
 
   const host = createCompilerHost(this);
 
+  if (shouldGenerateSourceMap) {
+    ascOptions.sourceMap = true;
+  }
+
   const args = [
     path.basename(this.resourcePath),
     "--baseDir",
@@ -99,9 +107,6 @@ function loader(this: any, buffer: Buffer) {
     outFileName,
     ...mapAscOptionsToArgs(ascOptions),
   ];
-  if (shouldGenerateSourceMap) {
-    args.push("--sourceMap", "--debug");
-  }
   if (bind && name.endsWith(".wasm")) {
     // add required by as-bind file to compilation
     args.unshift(require.resolve("as-bind/lib/assembly/as-bind.ts"));

@@ -22,4 +22,4 @@ function mapAscOptionsToArgs(options: Options): string[] {
   return args;
 }
 
-export { mapAscOptionsToArgs };
+export { mapAscOptionsToArgs, Options };

@@ -333,11 +333,11 @@ Options passed to the [AssemblyScript compiler](https://www.assemblyscript.org/c
 
 | Name             | Type     | Description |
 |------------------|----------| ----------- |
-| `debug`          | boolean  | Enables debug information in emitted binaries. |
-| `optimizeLevel`  | number   | How much to focus on optimizing code. [0-3] |
-| `shrinkLevel`    | number   | How much to focus on shrinking code size. [0-2] |
+| `debug`          | boolean  | Enables debug information in emitted binaries, enabled by default in webpack development mode. |
+| `optimizeLevel`  | number   | How much to focus on optimizing code, 3 by default. [0-3] |
+| `shrinkLevel`    | number   | How much to focus on shrinking code size, 1 by default. [0-2] |
 | `coverage`       | boolean  | Re-optimizes until no further improvements can be made. |
-| `noAssert`       | boolean  | Replaces assertions with just their value without trapping. |
+| `noAssert`       | boolean  | Replaces assertions with just their value without trapping, enabled by default in webpack production mode. |
 | `importMemory`   | boolean  | Imports the memory provided as 'env.memory'. |
 | `noExportMemory` | boolean  | Does not export the memory as 'memory'. |
 | `initialMemory`  | number   | Sets the initial memory size in pages. |
