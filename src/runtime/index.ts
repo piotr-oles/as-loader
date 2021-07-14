@@ -9,6 +9,7 @@ import type {
   AsLoaderModule,
 } from "./types";
 import { context } from "./context";
+import "./types/std";
 
 async function instantiate<TModule>(
   module: TModule | string,

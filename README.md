@@ -18,10 +18,12 @@ Node.js >= 12 and [webpack 4 or webpack 5](https://github.com/webpack/webpack)
 
 ```sh
 # with npm
-npm install --save-dev as-loader assemblyscript
+npm install as-loader
+npm install --save-dev assemblyscript
 
 # with yarn
-yarn add --dev as-loader assemblyscript
+yarn add as-loader
+yarn add --dev assemblyscript
 ```
 
 The minimal `webpack.config.js`:

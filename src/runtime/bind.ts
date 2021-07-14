@@ -8,6 +8,7 @@ import type {
 } from "./types";
 import { context } from "./context";
 import { AsBindReturnTypes } from "./types/ref-types";
+import "./types/std";
 
 async function instantiate<
   TModule,
