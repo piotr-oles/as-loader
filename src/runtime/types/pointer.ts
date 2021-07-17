@@ -37,8 +37,8 @@ export type PointerCastObject<
 export type PointerCastInstance<
   T extends new (...args: any) => any,
   E = NonPointerTypes
-> = T extends new (...args: any) => infer R
-  ? T & {
+> = T extends new (...args: infer A) => infer R
+  ? (new (...args: PointerCastArray<A, E>) => PointerCastObject<R, E>) & {
       wrap(ptr: Pointer<PointerCastObject<R, E>>): PointerCastObject<R, E>;
     }
   : never;
