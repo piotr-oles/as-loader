@@ -73,7 +73,7 @@ export interface AsLoaderRuntime {
   /** Allocates a new string in the module's memory and returns a reference (pointer) to it. */
   __newString(str: string): Pointer<string>;
   /** Allocates a new array in the module's memory and returns a reference (pointer) to it. */
-  __newArray<T extends ArrayLike<T>>(id: number, values: T): Pointer<T>;
+  __newArray<T extends ArrayLike<unknown>>(id: number, values: T): Pointer<T>;
 
   /** Allocates an instance of the class represented by the specified id. */
   __new<T>(size: number, id: TypeId<T>): Pointer<T>;
