@@ -47,7 +47,9 @@ function loader(this: any, buffer: Buffer) {
     // default options
     // when user imports wasm with webassembly type, it's not possible to pass env
     runtime: module.type?.startsWith("webassembly") ? "stub" : "incremental",
-    exportRuntime: !module.type?.startsWith("webassembly"),
+    exportRuntime:
+      !module.type?.startsWith("webassembly") &&
+      userAscOptions.exportRuntime !== "stub",
     debug: this.mode === "development",
     optimizeLevel: 3,
     shrinkLevel: 1,
