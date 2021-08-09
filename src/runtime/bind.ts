@@ -1,5 +1,5 @@
 import type { Imports } from "@assemblyscript/loader";
-import { AsBind } from "as-bind";
+import * as AsBind from "as-bind";
 import type {
   BoundWasmModuleInstance,
   JsModuleInstance,
@@ -7,7 +7,6 @@ import type {
   AsLoaderModule,
 } from "./types";
 import { context } from "./context";
-import { AsBindReturnTypes } from "./types/ref-types";
 import "./types/std";
 
 async function instantiate<
@@ -46,6 +45,8 @@ async function instantiate<
     // WebAssembly is supported
     return {
       type: "wasm-bound",
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - invalid as-bind typings
       ...(await AsBind.instantiate(load(moduleURL as string), imports)),
     };
   } else if (fallback && moduleURL.fallback) {
@@ -60,11 +61,8 @@ async function instantiate<
   );
 }
 
-const RETURN_TYPES: AsBindReturnTypes = AsBind.RETURN_TYPES;
-
 export {
   instantiate,
-  RETURN_TYPES,
   Imports,
   BoundWasmModuleInstance,
   JsModuleInstance,

@@ -32,6 +32,7 @@ module.exports = {
       files: ["test/e2e/fixtures/**/*.ts"],
       rules: {
         "node/no-missing-import": "off",
+        "node/no-extraneous-import": "off"
       },
     },
   ],
