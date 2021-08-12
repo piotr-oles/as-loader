@@ -1,5 +1,6 @@
-import path from "path";
-import asc, { DiagnosticMessage, APIOptions } from "assemblyscript/cli/asc";
+import * as path from "path";
+import * as asc from "assemblyscript/cli/asc";
+import type { DiagnosticMessage, APIOptions } from "assemblyscript/cli/asc";
 
 type CompilerHost = Required<
   Pick<
