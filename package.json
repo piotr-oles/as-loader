@@ -1,6 +1,6 @@
 {
   "name": "as-loader",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "AssemblyScript loader for webpack",
   "main": "loader/index.js",
   "repository": "git@github.com:piotr-oles/as-loader.git",
