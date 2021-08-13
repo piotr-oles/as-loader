@@ -6,7 +6,6 @@ import type {
   PointerCastFunction,
   PointerCast,
 } from "./pointer";
-import { AsBindReturnTypes, RefType } from "./ref-types";
 
 export type BoundNonPointerTypes =
   | NonPointerTypes
@@ -30,17 +29,9 @@ export type BoundNonPointerTypes =
   | BigInt64Array
   | BigUint64Array;
 
-export type BoundFunction<T extends (...args: any) => any> = T extends (
-  ...args: any
-) => infer R
-  ? PointerCastFunction<T, BoundNonPointerTypes> & {
-      shouldCacheTypes?: boolean;
-      returnType?: R extends NonPointerTypes
-        ? AsBindReturnTypes["NUMBER"]
-        : RefType<R>;
-      unsafeReturnValue?: boolean;
-    }
-  : never;
+export type BoundFunction<T extends (...args: any) => any> =
+  PointerCastFunction<T, BoundNonPointerTypes>;
+
 export type BoundExports<T extends Record<any, any>> = T extends Record<
   string | symbol | number,
   any

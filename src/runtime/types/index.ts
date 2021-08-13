@@ -19,12 +19,6 @@ export interface BoundWasmModuleInstance<TModule, TImports> {
   importObject: TImports;
   module: WebAssembly.Module;
   instance: WebAssembly.Instance;
-  enableExportFunctionTypeCaching(): void;
-  disableExportFunctionTypeCaching(): void;
-  enableExportFunctionUnsafeReturnValue(): void;
-  disableExportFunctionUnsafeReturnValue(): void;
-  enableImportFunctionTypeCaching(): void;
-  disableImportFunctionTypeCaching(): void;
 }
 export interface JsModuleInstance<TModule> {
   type: "js";

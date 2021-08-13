@@ -181,12 +181,6 @@ export interface BoundWasmModuleInstance<TModule, TImports> {
   importObject: TImports;
   module: WebAssembly.Module;
   instance: WebAssembly.Instance;
-  enableExportFunctionTypeCaching(): void;
-  disableExportFunctionTypeCaching(): void;
-  enableExportFunctionUnsafeReturnValue(): void;
-  disableExportFunctionUnsafeReturnValue(): void;
-  enableImportFunctionTypeCaching(): void;
-  disableImportFunctionTypeCaching(): void;
 }
 
 export interface JsModuleInstance<TModule> {
@@ -205,8 +199,6 @@ export function instantiate<TModule, TImports>(
   fallback: boolean = false,
   supports?: () => boolean
 ): Promise<BoundModuleInstance<TModule, TImports>>
-
-export const RETURN_TYPES: AsBindReturnTypes;
 ```
 
 <details>
@@ -220,14 +212,12 @@ export function sayHello(firstName: string, lastName: string): string {
 
 // ./src/sayHello.ts
 import * as sayHelloModule from "./assembly/sayHello";
-import { instantiate, RETURN_TYPES } from "as-loader/runtime/bind";
+import { instantiate } from "as-loader/runtime/bind";
 
 export async function loadModule(): Promise<typeof sayHelloModule> {
-  const { exports } = await instantiate(sayHelloModule, fetch);
-  const { sayHello } = exports;
-  sayHello.returnType = RETURN_TYPES.STRING;
+  const module = await instantiate(sayHelloModule, fetch);
 
-  return { sayHello };
+  return { sayHello: module.exports.sayHello };
 }
 ```
 

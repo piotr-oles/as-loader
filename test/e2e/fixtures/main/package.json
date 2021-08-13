@@ -10,8 +10,7 @@
     "dist/*"
   ],
   "dependencies": {
-    "assemblyscript": "0.18.11",
-    "@assemblyscript/loader": "0.18.11",
+    "assemblyscript": "0.19.10",
     "ts-loader": "8.0.17",
     "typescript": "4.2.2",
     "webpack": "4.46.0",

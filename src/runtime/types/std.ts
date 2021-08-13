@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // Types
 declare type bool = boolean;
 declare type i8 = number;

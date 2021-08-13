@@ -1,7 +1,17 @@
 import path from "path";
 import asc, { DiagnosticMessage, APIOptions } from "assemblyscript/cli/asc";
 
-type CompilerHost = Required<APIOptions> & {
+type CompilerHost = Required<
+  Pick<
+    APIOptions,
+    | "stdout"
+    | "stderr"
+    | "readFile"
+    | "writeFile"
+    | "listFiles"
+    | "reportDiagnostic"
+  >
+> & {
   getDiagnostics(): DiagnosticMessage[];
 };
 

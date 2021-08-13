@@ -17,41 +17,43 @@
     "build": "tsc",
     "lint": "eslint src test",
     "test": "jest",
-    "release": "auto shipit"
+    "release": "auto shipit",
+    "prepare": "husky install"
   },
   "files": [
     "loader/*",
     "runtime/*"
   ],
   "peerDependencies": {
-    "assemblyscript": "~0.18.0",
+    "assemblyscript": "^0.19.0",
     "webpack": "^4.0.0 || ^5.0.0"
   },
   "dependencies": {
-    "@assemblyscript/loader": "~0.18.0",
-    "as-bind": "^0.6.0",
+    "@assemblyscript/loader": "^0.19.0",
+    "as-bind": "^0.8.0",
     "loader-utils": "^2.0.0",
-    "schema-utils": "^3.0.0"
+    "schema-utils": "^3.1.1"
   },
   "devDependencies": {
-    "@types/loader-utils": "^2.0.1",
-    "@types/webpack": "^4.0.0",
-    "@typescript-eslint/eslint-plugin": "^4.15.1",
-    "@typescript-eslint/parser": "^4.15.1",
-    "assemblyscript": "^0.18.0",
-    "auto": "^10.16.5",
-    "eslint": "^7.20.0",
-    "eslint-config-prettier": "^8.0.0",
+    "@types/jest": "^26.0.24",
+    "@types/loader-utils": "^2.0.3",
+    "@types/webpack": "^5.28.0",
+    "@typescript-eslint/eslint-plugin": "^4.29.0",
+    "@typescript-eslint/parser": "^4.29.0",
+    "assemblyscript": "^0.19.0",
+    "auto": "^10.30.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.3.1",
-    "husky": "^4.0.0",
-    "jest": "^26.6.3",
+    "eslint-plugin-prettier": "^3.4.0",
+    "husky": "^7.0.0",
+    "jest": "^27.0.6",
     "karton": "^0.4.1",
-    "lint-staged": "^10.5.4",
-    "prettier": "^2.2.1",
-    "ts-jest": "^26.5.1",
-    "typescript": "^4.1.5",
-    "webpack": "^4.0.0"
+    "lint-staged": "^11.1.2",
+    "prettier": "^2.3.2",
+    "ts-jest": "^27.0.4",
+    "typescript": "^4.3.5",
+    "webpack": "^5.0.0"
   },
   "auto": {
     "plugins": [
@@ -62,11 +64,6 @@
       "noChangelog": true
     }
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged && yarn build"
-    }
-  },
   "lint-staged": {
     "*.ts": "eslint --fix"
   },
@@ -75,6 +72,6 @@
     "testEnvironment": "node"
   },
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   }
 }

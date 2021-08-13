@@ -68,6 +68,7 @@ function loader(this: any, buffer: Buffer) {
   if (bind && name.endsWith(".wasm")) {
     // overwrite options for bind
     ascOptions.exportRuntime = true;
+    ascOptions.transform = "as-bind";
   }
 
   if (name.endsWith(".js")) {
@@ -109,10 +110,6 @@ function loader(this: any, buffer: Buffer) {
     outFileName,
     ...mapAscOptionsToArgs(ascOptions),
   ];
-  if (bind && name.endsWith(".wasm")) {
-    // add required by as-bind file to compilation
-    args.unshift(require.resolve("as-bind/lib/assembly/as-bind.ts"));
-  }
 
   asc.ready
     .then(() => {
