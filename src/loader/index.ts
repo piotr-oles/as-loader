@@ -1,5 +1,5 @@
-import path from "path";
-import asc from "assemblyscript/cli/asc";
+import * as path from "path";
+import * as asc from "assemblyscript/cli/asc";
 import { DiagnosticCategory } from "assemblyscript";
 import { getOptions, interpolateName, OptionObject } from "loader-utils";
 import { validate } from "schema-utils";
@@ -7,7 +7,7 @@ import { Schema } from "schema-utils/declarations/validate";
 import { createCompilerHost } from "./compiler-host";
 import { mapAscOptionsToArgs, Options } from "./options";
 import { AssemblyScriptError } from "./error";
-import schema from "./schema.json";
+import * as schema from "./schema.json";
 import { addErrorToModule, addWarningToModule } from "./webpack";
 
 const SUPPORTED_EXTENSIONS = [".wasm", ".js"];

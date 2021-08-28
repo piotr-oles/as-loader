@@ -1,6 +1,9 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="./types/std.ts" />
 import {
   Imports,
   instantiate as asLoaderInstantiate,
+  ResultObject,
 } from "@assemblyscript/loader";
 import type {
   WasmModuleInstance,
@@ -8,57 +11,90 @@ import type {
   ModuleInstance,
   AsLoaderModule,
 } from "./types";
-import { context } from "./context";
-import "./types/std";
+import type {
+  Pointer,
+  NonPointerTypes,
+  NullablePointer,
+  PointerCast,
+  PointerCastArray,
+  PointerCastFunction,
+  PointerCastInstance,
+  PointerCastObject,
+} from "./types/pointer";
+import type { AsLoaderRuntime } from "./types/runtime";
 
-async function instantiate<TModule>(
+function instantiate<TModule>(
   module: TModule | string,
   load: (url: string) => Promise<unknown>,
   imports?: Imports,
   fallback?: false,
   supports?: () => boolean
 ): Promise<WasmModuleInstance<TModule>>;
-async function instantiate<TModule>(
+function instantiate<TModule>(
   module: TModule | string,
   load: (url: string) => Promise<unknown>,
   imports: Imports | undefined,
   fallback: true,
   supports?: () => boolean
 ): Promise<ModuleInstance<TModule>>;
-async function instantiate<TModule>(
+function instantiate<TModule>(
   module: TModule | string,
   load: (url: string) => Promise<unknown>,
-  imports: Imports = {},
-  fallback = false,
-  supports = () => Boolean(context && context.WebAssembly)
+  imports?: Imports,
+  fallback?: boolean,
+  supports = () => typeof WebAssembly === "object"
 ): Promise<ModuleInstance<TModule>> {
-  const moduleURL: AsLoaderModule<TModule> = module as never;
-
   if (supports()) {
     // WebAssembly is supported
-    return {
-      type: "wasm",
-      ...(await asLoaderInstantiate<never>(load(moduleURL as string), imports)),
-    };
-  } else if (fallback && moduleURL.fallback) {
-    return {
-      type: "js",
-      exports: await moduleURL.fallback(),
-    };
+    return asLoaderInstantiate<never>(
+      load(module as string),
+      imports || {}
+    ).then(
+      (
+        result: ResultObject & {
+          exports: AsLoaderRuntime & PointerCastObject<TModule>;
+        }
+      ) => ({
+        type: "wasm",
+        exports: result.exports,
+        instance: result.instance,
+        module: result.module,
+      })
+    );
+  } else if (fallback && (module as AsLoaderModule<TModule>).fallback) {
+    // eslint-disable-next-line
+    return (module as AsLoaderModule<TModule>).fallback!().then(
+      (exports: TModule) => ({
+        type: "js",
+        exports,
+      })
+    );
   }
 
-  throw new Error(
-    `Cannot load "${moduleURL}" module. WebAssembly is not supported in this environment.`
+  return Promise.reject(
+    new Error(
+      `Cannot load "${module}" module. WebAssembly is not supported in this environment.`
+    )
   );
 }
 
 export {
   instantiate,
+  // types
   Imports,
   WasmModuleInstance,
   JsModuleInstance,
   ModuleInstance,
   AsLoaderModule,
+  // pointer types
+  Pointer,
+  NonPointerTypes,
+  NullablePointer,
+  PointerCast,
+  PointerCastArray,
+  PointerCastFunction,
+  PointerCastInstance,
+  PointerCastObject,
+  // runtime types
+  AsLoaderRuntime,
 };
-export * from "./types/pointer";
-export * from "./types/runtime";

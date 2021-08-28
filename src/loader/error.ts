@@ -1,7 +1,7 @@
-import path from "path";
-import { DiagnosticMessage } from "assemblyscript/cli/asc";
+import * as path from "path";
+import type { DiagnosticMessage } from "assemblyscript/cli/asc";
 import { getLineColumnFromIndex, LineColumn } from "./line-column";
-import { CompilerHost } from "./compiler-host";
+import type { CompilerHost } from "./compiler-host";
 
 interface Location {
   start?: LineColumn;
