@@ -256,10 +256,24 @@ module.exports = {
       {
         test: /\.ts$/,
         include: path.resolve(__dirname, "src/assembly"),
-        loader: "as-loader",
-        options: {
-          fallback: true
-        }
+        use: [
+          // fallback loader (must be before as-loader)
+          {
+            loader: "ts-loader",
+            options: {
+              transpileOnly: true
+            }   
+          },   
+          // as-loader, apart from building .wasm file,
+          // will forward assembly script files to the fallback loader above
+          // to build a .js file
+          {
+            loader: "as-loader",
+            options: {
+              fallback: true
+           }
+          }
+        ]
       },
       {
         test: /\.ts$/,
