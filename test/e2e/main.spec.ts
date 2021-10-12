@@ -168,31 +168,52 @@ describe("as-loader", () => {
         );
         await sandbox.patch(
           "webpack.config.js",
-          '          name: "[name].wasm",',
-          ['          name: "[name].wasm",', "          fallback: true,"].join(
-            "\n"
-          )
+          [
+            '        loader: "as-loader",',
+            "        options: {",
+            '          name: "[name].wasm",',
+            "        },",
+          ].join("\n"),
+          [
+            "        use: [",
+            "          {",
+            '            loader: "ts-loader",',
+            "            options: {",
+            "              transpileOnly: true,",
+            "            }",
+            "          },",
+            "          {",
+            '            loader: "as-loader",',
+            "            options: {",
+            '              name: "[name].wasm",',
+            "              fallback: true,",
+            "            },",
+            "          },",
+            "        ],",
+          ].join("\n")
         );
 
         const webpackResults = await sandbox.exec("yarn webpack");
 
-        expect(webpackResults).toContain("simple.js");
-        expect(webpackResults).toContain("simple.wasm");
-        expect(webpackResults).toContain("simple.wasm.map");
+        expect(webpackResults).toContain("complex.js");
+        expect(webpackResults).toContain("complex.wasm");
+        expect(webpackResults).toContain("complex.wasm.map");
         expect(webpackResults).toContain("main.js");
 
-        expect(await sandbox.exists("dist/simple.js")).toEqual(true);
-        expect(await sandbox.exists("dist/simple.wasm")).toEqual(true);
-        expect(await sandbox.exists("dist/simple.js.map")).toEqual(true);
-        expect(await sandbox.exists("dist/simple.wasm.map")).toEqual(true);
+        expect(await sandbox.exists("dist/complex.js")).toEqual(true);
+        expect(await sandbox.exists("dist/complex.wasm")).toEqual(true);
+        expect(await sandbox.exists("dist/complex.js.map")).toEqual(true);
+        expect(await sandbox.exists("dist/complex.wasm.map")).toEqual(true);
 
-        const simpleJsMap = await sandbox.read("dist/simple.js.map", "utf8");
+        const simpleJsMap = await sandbox.read("dist/complex.js.map", "utf8");
         expect(Object.keys(JSON.parse(simpleJsMap))).toEqual(
           expect.arrayContaining(["version", "sources", "names", "mappings"])
         );
 
         const mainResults = await sandbox.exec("node ./dist/main.js");
-        expect(mainResults).toEqual("15\n");
+        expect(mainResults).toEqual(
+          "rgb(100, 50, 20),rgb(105, 51, 19),rgb(110, 52, 18),rgb(115, 53, 17),rgb(120, 54, 16),rgb(125, 55, 15),rgb(130, 56, 14),rgb(135, 57, 13),rgb(140, 58, 12),rgb(145, 59, 11)\n"
+        );
       }
     );
 

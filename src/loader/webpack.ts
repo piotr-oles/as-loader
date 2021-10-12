@@ -1,3 +1,5 @@
+import * as webpack from "webpack";
+
 interface CompatibleWebpackModule {
   addWarning?(warning: Error): void;
   addError?(error: Error): void;
@@ -29,4 +31,20 @@ function addErrorToModule(module: CompatibleWebpackModule, error: Error) {
   }
 }
 
-export { addWarningToModule, addErrorToModule };
+function markModuleAsCompiledToWasm(module: webpack.Module) {
+  module.buildMeta.asLoaderCompiledToWasm = true;
+}
+
+function isModuleCompiledToWasm(module: webpack.Module): boolean {
+  return Boolean(
+    module.buildMeta.asLoaderCompiledToWasm ||
+      (module.issuer && isModuleCompiledToWasm(module.issuer))
+  );
+}
+
+export {
+  addWarningToModule,
+  addErrorToModule,
+  markModuleAsCompiledToWasm,
+  isModuleCompiledToWasm,
+};

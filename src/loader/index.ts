@@ -8,7 +8,12 @@ import { createCompilerHost } from "./compiler-host";
 import { mapAscOptionsToArgs, Options } from "./options";
 import { AssemblyScriptError } from "./error";
 import * as schema from "./schema.json";
-import { addErrorToModule, addWarningToModule } from "./webpack";
+import {
+  addErrorToModule,
+  addWarningToModule,
+  isModuleCompiledToWasm,
+  markModuleAsCompiledToWasm,
+} from "./webpack";
 
 const SUPPORTED_EXTENSIONS = [".wasm", ".js"];
 
@@ -21,7 +26,7 @@ interface LoaderOptions {
 type CompilerOptions = OptionObject;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function loader(this: any, buffer: Buffer) {
+function loader(this: any, content: string, map?: any, meta?: any) {
   const options = getOptions(this);
   validate(schema as Schema, options, {
     name: "AssemblyScript Loader",
@@ -43,6 +48,35 @@ function loader(this: any, buffer: Buffer) {
     ...userAscOptions
   } = options as LoaderOptions & CompilerOptions;
 
+  if (isModuleCompiledToWasm(module)) {
+    // skip asc compilation - forward request to a fallback loader
+    return callback(null, content, map, meta);
+  }
+
+  if (!SUPPORTED_EXTENSIONS.some((extension) => name.endsWith(extension))) {
+    throw new Error(
+      `Unsupported extension in name: "${name}" option in as-loader. ` +
+        `Supported extensions are ${SUPPORTED_EXTENSIONS.join(", ")}`
+    );
+  }
+
+  if (fallback) {
+    if (module.type?.startsWith("webassembly")) {
+      throw new Error(
+        `Cannot use fallback option together with module type "${module.type}". ` +
+          `Use standard module type or disable fallback option.`
+      );
+    } else if (raw) {
+      throw new Error(`Cannot use fallback option together with raw option.`);
+    }
+  }
+
+  if (name.endsWith(".js")) {
+    throw new Error(
+      `Cannot use .js extension directly. Please use fallback option instead.`
+    );
+  }
+
   const ascOptions: Options = {
     // default options
     // when user imports wasm with webassembly type, it's not possible to pass env
@@ -58,43 +92,19 @@ function loader(this: any, buffer: Buffer) {
     ...userAscOptions,
   };
 
-  if (!SUPPORTED_EXTENSIONS.some((extension) => name.endsWith(extension))) {
-    throw new Error(
-      `Unsupported extension in name: "${name}" option in as-loader. ` +
-        `Supported extensions are ${SUPPORTED_EXTENSIONS.join(", ")}`
-    );
-  }
-
-  if (bind && name.endsWith(".wasm")) {
+  if (bind) {
     // overwrite options for bind
     ascOptions.exportRuntime = true;
     ascOptions.transform = "as-bind";
-  }
-
-  if (name.endsWith(".js")) {
-    // overwrite options for js
-    ascOptions.runtime = "stub";
-    ascOptions.exportRuntime = false;
   }
 
   const shouldGenerateSourceMap = this.sourceMap;
   const baseDir = path.dirname(this.resourcePath);
   const outFileName = interpolateName(this, name, {
     context,
-    content: buffer.toString(),
+    content,
   });
   const sourceMapFileName = outFileName + ".map";
-
-  if (fallback) {
-    if (module.type?.startsWith("webassembly")) {
-      throw new Error(
-        `Cannot use fallback option together with module type "${module.type}". ` +
-          `Use standard module type or disable fallback option.`
-      );
-    } else if (raw) {
-      throw new Error(`Cannot use fallback option together with raw option.`);
-    }
-  }
 
   const host = createCompilerHost(this);
 
@@ -176,6 +186,8 @@ function loader(this: any, buffer: Buffer) {
           }
 
           if (outFileName.endsWith(".wasm")) {
+            markModuleAsCompiledToWasm(module);
+
             if (module.type?.startsWith("webassembly") || raw) {
               // uses module type: "webassembly/sync" or "webasssembly/async" or raw: true -
               // return binary instead of emitting files
@@ -266,6 +278,5 @@ function loader(this: any, buffer: Buffer) {
       callback(error);
     });
 }
-loader.raw = true;
 
 module.exports = loader;
