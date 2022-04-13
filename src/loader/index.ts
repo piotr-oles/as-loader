@@ -8,12 +8,7 @@ import { createCompilerHost } from "./compiler-host";
 import { mapAscOptionsToArgs, Options } from "./options";
 import { AssemblyScriptError } from "./error";
 import * as schema from "./schema.json";
-import {
-  addErrorToModule,
-  addWarningToModule,
-  isModuleCompiledToWasm,
-  markModuleAsCompiledToWasm,
-} from "./webpack";
+import { isModuleCompiledToWasm, markModuleAsCompiledToWasm } from "./webpack";
 
 const SUPPORTED_EXTENSIONS = [".wasm", ".js"];
 
@@ -151,9 +146,9 @@ function loader(this: any, content: string, map?: any, meta?: any) {
             );
 
             if (diagnostic.category === DiagnosticCategory.ERROR) {
-              addErrorToModule(module, error);
+              module.addError(error);
             } else {
-              addWarningToModule(module, error);
+              module.addWarning(error);
             }
           });
           const errorDiagnostics = diagnostics.filter(
