@@ -54,6 +54,10 @@ module.exports = {
 };
 ```
 
+## Example repository
+
+https://stackblitz.com/edit/webpack-webpack-js-org-zl6ung?file=webpack.config.js
+
 ## Usage
 
 By default, the loader emits a `.wasm` file (+ `.wasm.map` if source maps are enabled) and 
